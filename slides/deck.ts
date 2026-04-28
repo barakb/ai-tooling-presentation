@@ -184,15 +184,38 @@ OPENAI_API_KEY=... just curl-demo 03-tool-result-roundtrip</code></pre>
     ]
   },
   {
+    className: "compact-slide rust-genai-slide",
     html: `
-      <h2>rust-genai maps the same loop</h2>
-      <pre><code>let tool = Tool::new("get_service_status")
-    .with_description("Return service health by name")
-    .with_schema(schema);
+      <h2>rust-genai uses the same tool schema</h2>
+      <div class="rust-tool-grid">
+        <article class="tool-definition-card">
+          <h3>1. Define the JSON schema in Rust</h3>
+          <pre><code>let schema = json!({
+  "type": "object",
+  "properties": {
+    "service": {
+      "type": "string",
+      "description": "Internal service name"
+    }
+  },
+  "required": ["service"],
+  "additionalProperties": false
+});</code></pre>
+        </article>
+        <article class="tool-definition-card">
+          <h3>2. Attach it to the tool request</h3>
+          <pre><code>let tool = Tool::new("get_service_status")
+  .with_description("Return service health by name")
+  .with_schema(schema);
 
-let req = ChatRequest::from_user(question).with_tools(vec![tool]);
-let response = client.exec_chat(model, req, None).await?;</code></pre>
-      <p>The Rust code changes the ergonomics, not the core protocol idea.</p>
+let req = ChatRequest::from_user(question)
+  .with_tools(vec![tool]);
+
+let response =
+  client.exec_chat(model, req, None).await?;</code></pre>
+        </article>
+      </div>
+      <p class="callout">The SDK changes the ergonomics; the contract is still the same schema the REST call sends to the model.</p>
     `
   },
   {

@@ -195,6 +195,13 @@
   margin-top: 0.45rem;
 }
 
+.rust-tool-grid {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: 1fr 1fr;
+  margin-top: 0.55rem;
+}
+
 .tool-definition-card,
 .message-steps-card {
   background: var(--panel);
@@ -219,6 +226,17 @@
   line-height: 1.15;
   max-height: none;
   padding: 0.65rem;
+}
+
+.rust-genai-slide .tool-definition-card pre code {
+  font-size: 0.39em;
+  line-height: 1.18;
+}
+
+.rust-genai-slide .callout {
+  font-size: 0.5em;
+  margin-top: 0.75rem;
+  padding: 0.75rem;
 }
 
 .message-steps {
