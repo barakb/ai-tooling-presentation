@@ -3,7 +3,7 @@ use axum::http::StatusCode;
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use clap::Parser;
-use mini_copilot_core::{Agent, AgentResponse};
+use mini_copilot_core::{Agent, AgentPolicy, AgentResponse};
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::net::SocketAddr;
@@ -32,6 +32,8 @@ struct AppState {
 #[derive(Debug, Deserialize)]
 struct AskRequest {
     prompt: String,
+    #[serde(default)]
+    veto_file_access: bool,
 }
 
 #[tokio::main]
@@ -67,30 +69,48 @@ async fn ask(
     State(state): State<AppState>,
     Json(request): Json<AskRequest>,
 ) -> Result<Json<AgentResponse>, (StatusCode, Json<Value>)> {
-    run_agent(&state, &request.prompt)
-        .map(Json)
-        .map_err(api_error)
+    run_agent(
+        &state,
+        &request.prompt,
+        AgentPolicy {
+            veto_file_access: request.veto_file_access,
+        },
+    )
+    .map(Json)
+    .map_err(api_error)
 }
 
 async fn demo_agent_loop(
     State(state): State<AppState>,
 ) -> Result<Json<AgentResponse>, (StatusCode, Json<Value>)> {
-    run_agent(&state, "Summarize the service status file")
-        .map(Json)
-        .map_err(api_error)
+    run_agent(
+        &state,
+        "Summarize the service status file",
+        AgentPolicy::default(),
+    )
+    .map(Json)
+    .map_err(api_error)
 }
 
 async fn demo_hooks(
     State(state): State<AppState>,
 ) -> Result<Json<AgentResponse>, (StatusCode, Json<Value>)> {
-    run_agent(&state, "Read service status and show hook trace")
-        .map(Json)
-        .map_err(api_error)
+    run_agent(
+        &state,
+        "Read service status and show hook trace",
+        AgentPolicy::default(),
+    )
+    .map(Json)
+    .map_err(api_error)
 }
 
-fn run_agent(state: &AppState, prompt: &str) -> mini_copilot_core::Result<AgentResponse> {
+fn run_agent(
+    state: &AppState,
+    prompt: &str,
+    policy: AgentPolicy,
+) -> mini_copilot_core::Result<AgentResponse> {
     let agent = Agent::new((*state.workspace).clone())?;
-    agent.ask(prompt)
+    agent.ask_with_policy(prompt, policy)
 }
 
 fn api_error(err: mini_copilot_core::AgentError) -> (StatusCode, Json<Value>) {

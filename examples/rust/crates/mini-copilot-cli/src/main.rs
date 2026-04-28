@@ -1,5 +1,5 @@
 use clap::{Parser, Subcommand, ValueEnum};
-use mini_copilot_core::Agent;
+use mini_copilot_core::{Agent, AgentPolicy};
 use std::path::PathBuf;
 
 #[derive(Debug, Parser)]
@@ -10,6 +10,9 @@ struct Args {
 
     #[arg(long, help = "Keep execution deterministic and offline")]
     dry_run: bool,
+
+    #[arg(long, help = "Simulate the user denying local file access")]
+    veto_file_access: bool,
 
     #[command(subcommand)]
     command: Command,
@@ -51,7 +54,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         eprintln!("running mini-agent in deterministic dry-run mode");
     }
 
-    let response = agent.ask(&prompt)?;
+    let response = match agent.ask_with_policy(
+        &prompt,
+        AgentPolicy {
+            veto_file_access: args.veto_file_access,
+        },
+    ) {
+        Ok(response) => response,
+        Err(err) => {
+            eprintln!("Error: {err}");
+            std::process::exit(1);
+        }
+    };
     println!("{}", serde_json::to_string_pretty(&response)?);
 
     Ok(())

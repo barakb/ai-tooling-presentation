@@ -9,6 +9,7 @@ pub type Result<T> = std::result::Result<T, AgentError>;
 
 #[derive(Debug)]
 pub enum AgentError {
+    AccessDenied(String),
     InvalidArguments(String),
     InvalidPath(String),
     Io(std::io::Error),
@@ -18,6 +19,7 @@ pub enum AgentError {
 impl Display for AgentError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
+            AgentError::AccessDenied(message) => write!(f, "access denied: {message}"),
             AgentError::InvalidArguments(message) => write!(f, "invalid arguments: {message}"),
             AgentError::InvalidPath(path) => {
                 write!(f, "path is outside the scoped workspace: {path}")
@@ -134,6 +136,11 @@ pub struct AgentResponse {
     pub selected_tool: ToolCall,
     pub tool_result: ToolResult,
     pub transcript: Transcript,
+}
+
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
+pub struct AgentPolicy {
+    pub veto_file_access: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -337,6 +344,10 @@ impl Agent {
     }
 
     pub fn ask(&self, prompt: &str) -> Result<AgentResponse> {
+        self.ask_with_policy(prompt, AgentPolicy::default())
+    }
+
+    pub fn ask_with_policy(&self, prompt: &str, policy: AgentPolicy) -> Result<AgentResponse> {
         let mut transcript = Transcript::default();
 
         self.hooks.emit(
@@ -352,6 +363,22 @@ impl Agent {
             &format!("dry-run model selected tool: {}", selected_tool.name),
             &mut transcript,
         )?;
+
+        self.hooks.emit(
+            HookPoint::BeforeTool,
+            &format!("requesting approval for tool: {}", selected_tool.name),
+            &mut transcript,
+        )?;
+
+        if policy.veto_file_access && requires_file_access(&selected_tool.name) {
+            let err = AgentError::AccessDenied(format!(
+                "user vetoed local file access for tool '{}'",
+                selected_tool.name
+            ));
+            self.hooks
+                .emit(HookPoint::OnError, &err.to_string(), &mut transcript)?;
+            return Err(err);
+        }
 
         self.hooks.emit(
             HookPoint::BeforeTool,
@@ -387,6 +414,10 @@ impl Agent {
     pub fn genai_tools(&self) -> Vec<Tool> {
         self.tools.genai_tools()
     }
+}
+
+fn requires_file_access(tool_name: &str) -> bool {
+    matches!(tool_name, "list_files" | "read_file" | "write_file")
 }
 
 pub fn as_genai_tool_response(call_id: impl Into<String>, result: &ToolResult) -> ToolResponse {
@@ -553,9 +584,32 @@ mod tests {
                 HookPoint::BeforeModel,
                 HookPoint::AfterModel,
                 HookPoint::BeforeTool,
+                HookPoint::BeforeTool,
                 HookPoint::AfterTool
             ]
         );
+    }
+
+    #[test]
+    fn user_can_veto_file_access_before_tool_execution() {
+        let temp = tempfile::tempdir().expect("tempdir");
+        fs::write(
+            temp.path().join("service_status.md"),
+            "payments-api is degraded.",
+        )
+        .expect("fixture");
+
+        let agent = Agent::new(temp.path()).expect("agent");
+        let err = agent
+            .ask_with_policy(
+                "Summarize status",
+                AgentPolicy {
+                    veto_file_access: true,
+                },
+            )
+            .expect_err("veto should reject file access");
+
+        assert!(matches!(err, AgentError::AccessDenied(_)));
     }
 
     #[cfg(unix)]

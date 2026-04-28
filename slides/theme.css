@@ -239,6 +239,60 @@
   padding: 0.75rem;
 }
 
+.walkthrough-grid {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: 1fr 1fr;
+  margin-top: 0.55rem;
+}
+
+.source-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 0.7rem;
+}
+
+.source-card h3 {
+  font-size: 0.5em;
+  margin: 0 0 0.2rem;
+}
+
+.source-path {
+  color: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.33em !important;
+  margin: 0 0 0.35rem !important;
+}
+
+.source-card pre,
+.wide-code {
+  margin: 0;
+  width: 100%;
+}
+
+.source-card pre code,
+.wide-code code {
+  font-size: 0.34em;
+  line-height: 1.15;
+  max-height: none;
+  padding: 0.62rem;
+}
+
+.wide-code {
+  margin-top: 0.75rem;
+}
+
+.code-walkthrough-slide .callout {
+  font-size: 0.46em;
+  margin-top: 0.75rem;
+  padding: 0.7rem;
+}
+
+.local-file-grid .source-card pre code {
+  font-size: 0.37em;
+}
+
 .message-steps {
   margin: 0;
   padding-left: 1rem;

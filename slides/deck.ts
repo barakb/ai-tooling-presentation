@@ -216,14 +216,155 @@ let response =
         </article>
       </div>
       <p class="callout">The SDK changes the ergonomics; the contract is still the same schema the REST call sends to the model.</p>
-    `
+    `,
+    children: [
+      {
+        className: "compact-slide code-walkthrough-slide",
+        html: `
+          <h2>How genai implements tooling</h2>
+          <div class="walkthrough-grid">
+            <article class="source-card">
+              <h3>Tool definition</h3>
+              <p class="source-path">genai/src/chat/tool/tool_base.rs</p>
+              <pre><code>pub struct Tool {
+  pub name: ToolName,
+  pub description: Option&lt;String&gt;,
+  pub schema: Option&lt;Value&gt;,
+  pub strict: Option&lt;bool&gt;,
+  pub config: Option&lt;ToolConfig&gt;,
+}</code></pre>
+            </article>
+            <article class="source-card">
+              <h3>Request carries tools</h3>
+              <p class="source-path">genai/src/chat/chat_request.rs</p>
+              <pre><code>pub struct ChatRequest {
+  pub messages: Vec&lt;ChatMessage&gt;,
+  pub tools: Option&lt;Vec&lt;Tool&gt;&gt;,
+}
+
+pub fn with_tools&lt;I&gt;(mut self, tools: I) -&gt; Self {
+  self.tools = Some(tools.into_iter()
+    .map(Into::into)
+    .collect());
+  self
+}</code></pre>
+            </article>
+          </div>
+          <p class="callout">genai normalizes the Rust API, then each provider adapter serializes these common structs into OpenAI, Claude, Gemini, etc.</p>
+        `
+      },
+      {
+        className: "compact-slide code-walkthrough-slide",
+        html: `
+          <h2>genai tool-call round trip</h2>
+          <div class="walkthrough-grid">
+            <article class="source-card">
+              <h3>Model-requested call</h3>
+              <p class="source-path">genai/src/chat/tool/tool_call.rs</p>
+              <pre><code>pub struct ToolCall {
+  pub call_id: String,
+  pub fn_name: String,
+  pub fn_arguments: Value,
+  pub thought_signatures: Option&lt;Vec&lt;String&gt;&gt;,
+}</code></pre>
+            </article>
+            <article class="source-card">
+              <h3>Host returns result</h3>
+              <p class="source-path">genai/src/chat/tool/tool_response.rs</p>
+              <pre><code>pub struct ToolResponse {
+  pub call_id: String,
+  pub content: String,
+}
+
+ToolResponse::new(call_id, result_json)</code></pre>
+            </article>
+          </div>
+          <pre class="wide-code"><code>let tool_calls = response.into_tool_calls();
+let result = run_host_tool(&tool_calls[0])?;
+let next_req = req
+  .append_message(tool_calls)
+  .append_message(ToolResponse::new(call_id, result));</code></pre>
+        `
+      }
+    ]
   },
   {
     html: `
       <h2>Mini Copilot-style API</h2>
       <img class="diagram" src="${miniCopilotDiagram}" alt="Mini Copilot architecture diagram" />
       <p>Small enough to teach, real enough to demonstrate the agent loop and hooks.</p>
-    `
+    `,
+    children: [
+      {
+        className: "compact-slide code-walkthrough-slide",
+        html: `
+          <h2>Mini-agent implementation walkthrough</h2>
+          <div class="walkthrough-grid">
+            <article class="source-card">
+              <h3>Tool registry exposes schemas</h3>
+              <p class="source-path">mini-copilot-core/src/lib.rs</p>
+              <pre><code>pub fn genai_tools(&self) -&gt; Vec&lt;Tool&gt; {
+  self.schemas()
+    .into_iter()
+    .filter_map(|schema| {
+      let name = schema.get("name")?.as_str()?;
+      let parameters = schema.get("parameters")?.clone();
+      Some(Tool::new(name).with_schema(parameters))
+    })
+    .collect()
+}</code></pre>
+            </article>
+            <article class="source-card">
+              <h3>Agent loop owns execution</h3>
+              <p class="source-path">mini-copilot-core/src/lib.rs</p>
+              <pre><code>let selected_tool = plan_tool_call(prompt);
+hooks.emit(BeforeTool, "requesting approval", tx)?;
+
+if policy.veto_file_access
+  && requires_file_access(&selected_tool.name) {
+  return Err(AgentError::AccessDenied(...));
+}
+
+let tool_result = tools.execute(&selected_tool)?;</code></pre>
+            </article>
+          </div>
+          <p class="callout">The mini SDK mirrors the real agent boundary: model selects intent, host policy approves, host tool registry executes.</p>
+        `
+      },
+      {
+        className: "compact-slide code-walkthrough-slide",
+        html: `
+          <h2>Local file question with user veto</h2>
+          <div class="walkthrough-grid local-file-grid">
+            <article class="source-card">
+              <h3>Allowed flow</h3>
+              <pre><code>mini-copilot-cli --dry-run ask \\
+  "Summarize service_status.md"
+
+plan_tool_call(prompt)
+  -&gt; read_file({"path":"service_status.md"})
+
+read_file canonicalizes the path,
+rejects ../ traversal and symlink escapes,
+then returns file content.</code></pre>
+            </article>
+            <article class="source-card">
+              <h3>Veto flow</h3>
+              <pre><code>mini-copilot-cli --dry-run \\
+  --veto-file-access ask \\
+  "Summarize service_status.md"
+
+POST /ask
+{
+  "prompt": "Summarize service_status.md",
+  "veto_file_access": true
+}</code></pre>
+            </article>
+          </div>
+          <p class="callout">The veto happens before the file tool runs, so no local file content is read or returned when the user denies access.</p>
+        `
+      }
+    ]
   },
   {
     html: `
@@ -233,18 +374,6 @@ let response =
         <article><h3>CLI</h3><p><code>mini-copilot ask "summarize"</code></p></article>
         <article><h3>HTTP</h3><p><code>POST /ask</code>, <code>POST /demo/hooks</code>, <code>GET /health</code></p></article>
       </div>
-    `
-  },
-  {
-    html: `
-      <h2>Rubber duck review checklist</h2>
-      <ul>
-        <li>Can I explain this step without hidden assumptions?</li>
-        <li>Does the slide match the code and command?</li>
-        <li>Where does validation happen?</li>
-        <li>What would fail during a live demo?</li>
-        <li>Can this run without an API key in dry-run mode?</li>
-      </ul>
     `
   },
   {

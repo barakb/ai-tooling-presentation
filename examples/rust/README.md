@@ -20,6 +20,14 @@ cargo run --manifest-path examples/rust/Cargo.toml -p genai-tool-roundtrip -- --
 cargo run --manifest-path examples/rust/Cargo.toml -p mini-copilot-cli -- --dry-run demo agent-loop
 ```
 
+## Veto demo
+
+This command intentionally exits with a non-zero status because the simulated user denies local file access before the `read_file` tool can run:
+
+```sh
+cargo run --manifest-path examples/rust/Cargo.toml -p mini-copilot-cli -- --dry-run --veto-file-access ask "Summarize service_status.md"
+```
+
 ## Live rust-genai demos
 
 ```sh
@@ -38,6 +46,9 @@ curl -sS http://127.0.0.1:3000/health
 curl -sS http://127.0.0.1:3000/ask \
   -H 'Content-Type: application/json' \
   -d '{"prompt":"Summarize service_status.md"}'
+curl -sS http://127.0.0.1:3000/ask \
+  -H 'Content-Type: application/json' \
+  -d '{"prompt":"Summarize service_status.md","veto_file_access":true}'
 ```
 
 The mini-agent uses a scoped fixture workspace so file tools cannot read or write outside `examples/rust/fixtures/workspace`.
