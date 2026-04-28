@@ -428,7 +428,11 @@ let response =
           <div class="walkthrough-grid">
             <article class="source-card">
               <h3>Tool definition</h3>
-              <p class="source-path">genai/src/chat/tool/tool_base.rs</p>
+              <p class="source-path">
+                <a href="https://docs.rs/crate/genai/0.6.0-beta.18/source/src/chat/tool/tool_base.rs" target="_blank" rel="noreferrer">
+                  genai/src/chat/tool/tool_base.rs
+                </a>
+              </p>
               <pre><code>pub struct Tool {
   pub name: ToolName,
   pub description: Option&lt;String&gt;,
@@ -439,7 +443,11 @@ let response =
             </article>
             <article class="source-card">
               <h3>Request carries tools</h3>
-              <p class="source-path">genai/src/chat/chat_request.rs</p>
+              <p class="source-path">
+                <a href="https://docs.rs/crate/genai/0.6.0-beta.18/source/src/chat/chat_request.rs" target="_blank" rel="noreferrer">
+                  genai/src/chat/chat_request.rs
+                </a>
+              </p>
               <pre><code>pub struct ChatRequest {
   pub messages: Vec&lt;ChatMessage&gt;,
   pub tools: Option&lt;Vec&lt;Tool&gt;&gt;,
@@ -459,11 +467,74 @@ pub fn with_tools&lt;I&gt;(mut self, tools: I) -&gt; Self {
       {
         className: "compact-slide code-walkthrough-slide",
         html: `
+          <h2>Provider adapters turn Tool into provider JSON</h2>
+          <div class="provider-adapter-grid">
+            <article class="source-card">
+              <h3>OpenAI adapter</h3>
+              <p class="source-path">
+                <a href="https://docs.rs/crate/genai/0.6.0-beta.18/source/src/adapter/adapters/openai/adapter_shared.rs" target="_blank" rel="noreferrer">
+                  openai/adapter_shared.rs
+                </a>
+              </p>
+              <pre><code>json!({
+  "type": "function",
+  "function": {
+    "name": tool.name,
+    "description": tool.description,
+    "parameters": parameters,
+    "strict": strict,
+  }
+})</code></pre>
+            </article>
+            <article class="source-card">
+              <h3>Anthropic adapter</h3>
+              <p class="source-path">
+                <a href="https://docs.rs/crate/genai/0.6.0-beta.18/source/src/adapter/adapters/anthropic/adapter_impl.rs" target="_blank" rel="noreferrer">
+                  anthropic/adapter_impl.rs
+                </a>
+              </p>
+              <pre><code>tool_value.x_insert("name", name)?;
+tool_value.x_insert("input_schema", schema)?;
+
+if let Some(description) = description {
+  tool_value.x_insert("description", description)?;
+}</code></pre>
+            </article>
+            <article class="source-card">
+              <h3>Gemini adapter</h3>
+              <p class="source-path">
+                <a href="https://docs.rs/crate/genai/0.6.0-beta.18/source/src/adapter/adapters/gemini/adapter_impl.rs" target="_blank" rel="noreferrer">
+                  gemini/adapter_impl.rs
+                </a>
+              </p>
+              <pre><code>for req_tool in req_tools {
+  match Self::tool_to_gemini_tool(req_tool)? {
+    GeminiTool::Builtin(value) =&gt; tools.push(value),
+    GeminiTool::User(value) =&gt;
+      function_declarations.push(value),
+  }
+}
+
+tools.push(json!({
+  "functionDeclarations": function_declarations
+}));</code></pre>
+            </article>
+          </div>
+          <p class="callout">This is why the same <code>Tool</code> object becomes <code>tools[].function</code>, <code>input_schema</code>, or <code>functionDeclarations</code> depending on the adapter.</p>
+        `
+      },
+      {
+        className: "compact-slide code-walkthrough-slide",
+        html: `
           <h2>genai tool-call round trip</h2>
           <div class="walkthrough-grid">
             <article class="source-card">
               <h3>Model-requested call</h3>
-              <p class="source-path">genai/src/chat/tool/tool_call.rs</p>
+              <p class="source-path">
+                <a href="https://docs.rs/crate/genai/0.6.0-beta.18/source/src/chat/tool/tool_call.rs" target="_blank" rel="noreferrer">
+                  genai/src/chat/tool/tool_call.rs
+                </a>
+              </p>
               <pre><code>pub struct ToolCall {
   pub call_id: String,
   pub fn_name: String,
@@ -473,7 +544,11 @@ pub fn with_tools&lt;I&gt;(mut self, tools: I) -&gt; Self {
             </article>
             <article class="source-card">
               <h3>Host returns result</h3>
-              <p class="source-path">genai/src/chat/tool/tool_response.rs</p>
+              <p class="source-path">
+                <a href="https://docs.rs/crate/genai/0.6.0-beta.18/source/src/chat/tool/tool_response.rs" target="_blank" rel="noreferrer">
+                  genai/src/chat/tool/tool_response.rs
+                </a>
+              </p>
               <pre><code>pub struct ToolResponse {
   pub call_id: String,
   pub content: String,

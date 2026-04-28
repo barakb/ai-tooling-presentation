@@ -246,6 +246,13 @@
   margin-top: 0.55rem;
 }
 
+.provider-adapter-grid {
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 0.55rem;
+}
+
 .source-card {
   background: var(--panel);
   border: 1px solid var(--border);
@@ -263,6 +270,12 @@
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 0.33em !important;
   margin: 0 0 0.35rem !important;
+}
+
+.source-path a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-color: rgba(88, 166, 255, 0.45);
 }
 
 .source-card pre,
@@ -291,6 +304,11 @@
 
 .local-file-grid .source-card pre code {
   font-size: 0.37em;
+}
+
+.provider-adapter-grid .source-card pre code {
+  font-size: 0.29em;
+  line-height: 1.12;
 }
 
 .provider-json-grid {
