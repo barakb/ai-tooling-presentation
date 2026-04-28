@@ -1,0 +1,35 @@
+{
+  "model": "gpt-4.1-mini",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a site reliability assistant. Use tools when service status is needed."
+    },
+    {
+      "role": "user",
+      "content": "Is the payments-api service healthy right now?"
+    }
+  ],
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "get_service_status",
+        "description": "Return current health information for an internal service.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "service": {
+              "type": "string",
+              "description": "The service name, for example payments-api."
+            }
+          },
+          "required": ["service"],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "tool_choice": "auto",
+  "temperature": 0.1
+}

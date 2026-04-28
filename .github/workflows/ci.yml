@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Typecheck and build slides
+        run: |
+          npm run typecheck
+          npm run build
+
+      - name: Check shell scripts
+        run: |
+          bash -n scripts/check.sh
+          bash -n examples/curl/*.sh
+
+      - name: Test Rust workspace
+        run: cargo test --manifest-path examples/rust/Cargo.toml
+
+      - name: Run deterministic demos
+        run: |
+          bash examples/curl/03-tool-result-roundtrip.sh --dry-run >/tmp/curl-demo.json
+          cargo run --manifest-path examples/rust/Cargo.toml -p mini-copilot-cli -- --dry-run demo agent-loop >/tmp/mini-agent.json

@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="360" viewBox="0 0 980 360" role="img" aria-labelledby="title desc">
+  <title id="title">Mini Copilot architecture</title>
+  <desc id="desc">CLI and HTTP API use the same agent core, hooks, tools, and rust-genai client.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#58a6ff"/>
+    </marker>
+    <style>
+      text { fill: #e6edf3; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 19px; font-weight: 700; }
+      .small { fill: #8b949e; font-size: 13px; font-weight: 500; }
+      .box { fill: #161b22; stroke: #58a6ff; stroke-width: 2; rx: 18; }
+      .green { stroke: #3fb950; }
+      .line { fill: none; stroke: #58a6ff; stroke-width: 3; marker-end: url(#arrow); }
+    </style>
+  </defs>
+  <rect class="box" x="50" y="70" width="150" height="70"/>
+  <text x="125" y="100" text-anchor="middle">CLI</text>
+  <text class="small" x="125" y="122" text-anchor="middle">demo commands</text>
+  <rect class="box" x="50" y="220" width="150" height="70"/>
+  <text x="125" y="250" text-anchor="middle">HTTP API</text>
+  <text class="small" x="125" y="272" text-anchor="middle">/ask, /health</text>
+  <rect class="box green" x="300" y="120" width="210" height="110"/>
+  <text x="405" y="162" text-anchor="middle">mini-copilot-core</text>
+  <text class="small" x="405" y="188" text-anchor="middle">agent loop + transcript</text>
+  <rect class="box" x="610" y="50" width="150" height="70"/>
+  <text x="685" y="80" text-anchor="middle">Hooks</text>
+  <text class="small" x="685" y="102" text-anchor="middle">policy + logs</text>
+  <rect class="box" x="610" y="150" width="150" height="70"/>
+  <text x="685" y="180" text-anchor="middle">Tools</text>
+  <text class="small" x="685" y="202" text-anchor="middle">scoped files</text>
+  <rect class="box" x="610" y="250" width="150" height="70"/>
+  <text x="685" y="280" text-anchor="middle">rust-genai</text>
+  <text class="small" x="685" y="302" text-anchor="middle">model client</text>
+  <rect class="box" x="820" y="150" width="120" height="70"/>
+  <text x="880" y="180" text-anchor="middle">OpenAI</text>
+  <text class="small" x="880" y="202" text-anchor="middle">optional live</text>
+  <path class="line" d="M200 105 C250 105 250 158 295 158"/>
+  <path class="line" d="M200 255 C250 255 250 192 295 192"/>
+  <path class="line" d="M510 155 C555 155 555 85 605 85"/>
+  <path class="line" d="M510 175 H605"/>
+  <path class="line" d="M510 198 C555 198 555 285 605 285"/>
+  <path class="line" d="M760 285 C800 285 800 205 815 190"/>
+</svg>

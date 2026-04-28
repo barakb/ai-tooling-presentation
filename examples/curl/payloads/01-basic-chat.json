@@ -1,0 +1,14 @@
+{
+  "model": "gpt-4.1-mini",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You explain LLM tooling to software engineers in concise language."
+    },
+    {
+      "role": "user",
+      "content": "In one sentence, what is an LLM tool call?"
+    }
+  ],
+  "temperature": 0.2
+}

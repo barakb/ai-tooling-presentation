@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="360" viewBox="0 0 980 360" role="img" aria-labelledby="title desc">
+  <title id="title">Hook lifecycle</title>
+  <desc id="desc">Hooks wrap model requests, model responses, tool execution, and errors.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#58a6ff"/>
+    </marker>
+    <style>
+      text { fill: #e6edf3; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 20px; font-weight: 700; }
+      .small { fill: #8b949e; font-size: 14px; font-weight: 500; }
+      .hook { fill: #0d1117; stroke: #3fb950; stroke-width: 2; rx: 16; }
+      .core { fill: #161b22; stroke: #58a6ff; stroke-width: 2; rx: 18; }
+      .line { fill: none; stroke: #58a6ff; stroke-width: 3; marker-end: url(#arrow); }
+    </style>
+  </defs>
+  <rect class="hook" x="40" y="50" width="190" height="68"/>
+  <text x="135" y="82" text-anchor="middle">before_model</text>
+  <text class="small" x="135" y="104" text-anchor="middle">context, redaction</text>
+  <rect class="core" x="300" y="50" width="180" height="68"/>
+  <text x="390" y="90" text-anchor="middle">model call</text>
+  <rect class="hook" x="550" y="50" width="190" height="68"/>
+  <text x="645" y="82" text-anchor="middle">after_model</text>
+  <text class="small" x="645" y="104" text-anchor="middle">trace, policy</text>
+  <rect class="hook" x="170" y="225" width="190" height="68"/>
+  <text x="265" y="257" text-anchor="middle">before_tool</text>
+  <text class="small" x="265" y="279" text-anchor="middle">validate, confirm</text>
+  <rect class="core" x="430" y="225" width="180" height="68"/>
+  <text x="520" y="265" text-anchor="middle">tool run</text>
+  <rect class="hook" x="680" y="225" width="190" height="68"/>
+  <text x="775" y="257" text-anchor="middle">after_tool</text>
+  <text class="small" x="775" y="279" text-anchor="middle">metrics, result log</text>
+  <path class="line" d="M230 84 H295"/>
+  <path class="line" d="M480 84 H545"/>
+  <path class="line" d="M645 122 C645 180 265 180 265 220"/>
+  <path class="line" d="M360 259 H425"/>
+  <path class="line" d="M610 259 H675"/>
+  <text class="small" x="800" y="92">errors can trigger policy hooks</text>
+</svg>
