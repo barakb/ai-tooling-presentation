@@ -62,9 +62,10 @@ const slides: Slide[] = [
       "Rubber duck review: can we explain every box without saying magic? The important point is that tool execution is outside the model."
   },
   {
+    className: "compact-slide",
     html: `
       <h2>Hooks: control points around the loop</h2>
-      <img class="diagram" src="${hooksDiagram}" alt="Hook lifecycle diagram" />
+      <img class="diagram diagram-short" src="${hooksDiagram}" alt="Hook lifecycle diagram" />
       <p>Hooks are where product behavior, policy, and observability become explicit.</p>
       <div class="split">
         <ul>
