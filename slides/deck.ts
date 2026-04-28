@@ -127,7 +127,210 @@ const slides: Slide[] = [
       </table>
     `,
     notes:
-      "Keep this as a translation table. Do not imply exact feature parity between providers."
+      "Keep this as a translation table. Do not imply exact feature parity between providers.",
+    children: [
+      {
+        className: "compact-slide provider-example-slide",
+        html: `
+          <h2>OpenAI tool messages</h2>
+          <div class="provider-json-grid">
+            <article class="provider-json-card">
+              <h3>1. Host request</h3>
+              <pre><code>{
+  "model": "gpt-4.1-mini",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Is payments-api healthy?"
+    }
+  ],
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "get_service_status",
+        "description": "Return service health.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "service": { "type": "string" }
+          },
+          "required": ["service"]
+        }
+      }
+    }
+  ]
+}</code></pre>
+            </article>
+            <article class="provider-json-card">
+              <h3>2. Model asks for tool</h3>
+              <pre><code>{
+  "role": "assistant",
+  "content": null,
+  "tool_calls": [
+    {
+      "id": "call_123",
+      "type": "function",
+      "function": {
+        "name": "get_service_status",
+        "arguments": "{\\"service\\":\\"payments-api\\"}"
+      }
+    }
+  ]
+}</code></pre>
+            </article>
+            <article class="provider-json-card">
+              <h3>3. Host returns result</h3>
+              <pre><code>{
+  "role": "tool",
+  "tool_call_id": "call_123",
+  "name": "get_service_status",
+  "content": "{\\"status\\":\\"degraded\\",\\"latency_ms\\":420}"
+}</code></pre>
+            </article>
+          </div>
+        `
+      },
+      {
+        className: "compact-slide provider-example-slide",
+        html: `
+          <h2>Anthropic Claude tool messages</h2>
+          <div class="provider-json-grid">
+            <article class="provider-json-card">
+              <h3>1. Host request</h3>
+              <pre><code>{
+  "model": "claude-sonnet-4-5",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Is payments-api healthy?"
+    }
+  ],
+  "tools": [
+    {
+      "name": "get_service_status",
+      "description": "Return service health.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "service": { "type": "string" }
+        },
+        "required": ["service"]
+      }
+    }
+  ]
+}</code></pre>
+            </article>
+            <article class="provider-json-card">
+              <h3>2. Model asks for tool</h3>
+              <pre><code>{
+  "role": "assistant",
+  "content": [
+    {
+      "type": "tool_use",
+      "id": "toolu_123",
+      "name": "get_service_status",
+      "input": {
+        "service": "payments-api"
+      }
+    }
+  ]
+}</code></pre>
+            </article>
+            <article class="provider-json-card">
+              <h3>3. Host returns result</h3>
+              <pre><code>{
+  "role": "user",
+  "content": [
+    {
+      "type": "tool_result",
+      "tool_use_id": "toolu_123",
+      "content": "{\\"status\\":\\"degraded\\",\\"latency_ms\\":420}"
+    }
+  ]
+}</code></pre>
+            </article>
+          </div>
+        `
+      },
+      {
+        className: "compact-slide provider-example-slide",
+        html: `
+          <h2>Google Gemini tool messages</h2>
+          <div class="provider-json-grid">
+            <article class="provider-json-card">
+              <h3>1. Host request</h3>
+              <pre><code>{
+  "contents": [
+    {
+      "role": "user",
+      "parts": [
+        { "text": "Is payments-api healthy?" }
+      ]
+    }
+  ],
+  "tools": [
+    {
+      "functionDeclarations": [
+        {
+          "name": "get_service_status",
+          "description": "Return service health.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "service": { "type": "string" }
+            },
+            "required": ["service"]
+          }
+        }
+      ]
+    }
+  ]
+}</code></pre>
+            </article>
+            <article class="provider-json-card">
+              <h3>2. Model asks for tool</h3>
+              <pre><code>{
+  "candidates": [
+    {
+      "content": {
+        "role": "model",
+        "parts": [
+          {
+            "functionCall": {
+              "name": "get_service_status",
+              "args": {
+                "service": "payments-api"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}</code></pre>
+            </article>
+            <article class="provider-json-card">
+              <h3>3. Host returns result</h3>
+              <pre><code>{
+  "role": "function",
+  "parts": [
+    {
+      "functionResponse": {
+        "name": "get_service_status",
+        "response": {
+          "status": "degraded",
+          "latency_ms": 420
+        }
+      }
+    }
+  ]
+}</code></pre>
+            </article>
+          </div>
+        `
+      }
+    ]
   },
   {
     html: `

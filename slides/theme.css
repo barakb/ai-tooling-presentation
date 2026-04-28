@@ -293,6 +293,37 @@
   font-size: 0.37em;
 }
 
+.provider-json-grid {
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 0.5rem;
+}
+
+.provider-json-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 0.6rem;
+}
+
+.provider-json-card h3 {
+  font-size: 0.43em;
+  margin: 0 0 0.28rem;
+}
+
+.provider-json-card pre {
+  margin: 0;
+  width: 100%;
+}
+
+.provider-json-card pre code {
+  font-size: 0.25em;
+  line-height: 1.12;
+  max-height: none;
+  padding: 0.55rem;
+}
+
 .message-steps {
   margin: 0;
   padding-left: 1rem;
