@@ -188,6 +188,61 @@
   padding: 0.7rem;
 }
 
+.tool-message-grid {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: 1.05fr 0.95fr;
+  margin-top: 0.45rem;
+}
+
+.tool-definition-card,
+.message-steps-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 0.7rem;
+}
+
+.tool-definition-card h3,
+.message-steps-card h3 {
+  font-size: 0.5em;
+  margin: 0 0 0.35rem;
+}
+
+.tool-definition-card pre {
+  margin: 0;
+  width: 100%;
+}
+
+.tool-definition-card pre code {
+  font-size: 0.36em;
+  line-height: 1.15;
+  max-height: none;
+  padding: 0.65rem;
+}
+
+.message-steps {
+  margin: 0;
+  padding-left: 1rem;
+}
+
+.message-steps li {
+  font-size: 0.42em;
+  line-height: 1.18;
+  margin-bottom: 0.35rem;
+}
+
+.message-steps strong {
+  color: var(--accent);
+  display: block;
+}
+
+.message-steps code {
+  color: #d2a8ff;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
 .message-table th,
 .message-table td {
   font-size: 0.44em;

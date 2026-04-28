@@ -146,43 +146,39 @@ OPENAI_API_KEY=... just curl-demo 03-tool-result-roundtrip</code></pre>
       {
         className: "compact-slide message-flow-slide",
         html: `
-          <h2>Example messages between participants</h2>
-          <table class="message-table">
-            <thead><tr><th>Stage</th><th>Participants</th><th>Example message</th></tr></thead>
-            <tbody>
-              <tr>
-                <td>1</td>
-                <td>User -&gt; Host</td>
-                <td><code>Is the payments-api service healthy right now?</code></td>
-              </tr>
-              <tr>
-                <td>2</td>
-                <td>Host -&gt; Model</td>
-                <td><code>messages=[user question], tools=[get_service_status schema]</code></td>
-              </tr>
-              <tr>
-                <td>3</td>
-                <td>Model -&gt; Host</td>
-                <td><code>assistant.tool_calls[0] = get_service_status({"service":"payments-api"})</code></td>
-              </tr>
-              <tr>
-                <td>4</td>
-                <td>Host &lt;-&gt; Tool</td>
-                <td><code>execute get_service_status -&gt; {"status":"degraded","latency_ms":420}</code></td>
-              </tr>
-              <tr>
-                <td>5</td>
-                <td>Host -&gt; Model</td>
-                <td><code>role=tool, tool_call_id=call_demo_status, content=status JSON</code></td>
-              </tr>
-              <tr>
-                <td>6</td>
-                <td>Model -&gt; User</td>
-                <td><code>payments-api is degraded; database failover is in progress.</code></td>
-              </tr>
-            </tbody>
-          </table>
-          <p class="callout">The model never executes the tool. The host does, then reports the result back.</p>
+          <h2>Tool contract + participant messages</h2>
+          <div class="tool-message-grid">
+            <article class="tool-definition-card">
+              <h3>0. Host defines the tool before the model call</h3>
+              <pre><code>"tools": [{
+  "type": "function",
+  "function": {
+    "name": "get_service_status",
+    "description": "Return current health for an internal service.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "service": { "type": "string" }
+      },
+      "required": ["service"],
+      "additionalProperties": false
+    }
+  }
+}]</code></pre>
+            </article>
+            <article class="message-steps-card">
+              <h3>1-6. The loop uses that contract</h3>
+              <ol class="message-steps">
+                <li><strong>User -&gt; Host</strong><code>Is payments-api healthy?</code></li>
+                <li><strong>Host -&gt; Model</strong><code>messages + tools[get_service_status]</code></li>
+                <li><strong>Model -&gt; Host</strong><code>tool_call: get_service_status({"service":"payments-api"})</code></li>
+                <li><strong>Host -&gt; Tool</strong><code>validate args, run local function</code></li>
+                <li><strong>Tool -&gt; Host</strong><code>{"status":"degraded","latency_ms":420}</code></li>
+                <li><strong>Host -&gt; Model -&gt; User</strong><code>role=tool result, then final answer</code></li>
+              </ol>
+            </article>
+          </div>
+          <p class="callout">The model can only request the tool. The host owns the definition, validation, execution, and returned result.</p>
         `
       }
     ]
