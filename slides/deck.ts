@@ -11,6 +11,7 @@ interface Slide {
   className?: string;
   html: string;
   notes?: string;
+  children?: Slide[];
 }
 
 const slides: Slide[] = [
@@ -140,7 +141,51 @@ const slides: Slide[] = [
       </ol>
       <pre><code>just curl-dry-run 03-tool-result-roundtrip
 OPENAI_API_KEY=... just curl-demo 03-tool-result-roundtrip</code></pre>
-    `
+    `,
+    children: [
+      {
+        className: "compact-slide message-flow-slide",
+        html: `
+          <h2>Example messages between participants</h2>
+          <table class="message-table">
+            <thead><tr><th>Stage</th><th>Participants</th><th>Example message</th></tr></thead>
+            <tbody>
+              <tr>
+                <td>1</td>
+                <td>User -&gt; Host</td>
+                <td><code>Is the payments-api service healthy right now?</code></td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td>Host -&gt; Model</td>
+                <td><code>messages=[user question], tools=[get_service_status schema]</code></td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td>Model -&gt; Host</td>
+                <td><code>assistant.tool_calls[0] = get_service_status({"service":"payments-api"})</code></td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td>Host &lt;-&gt; Tool</td>
+                <td><code>execute get_service_status -&gt; {"status":"degraded","latency_ms":420}</code></td>
+              </tr>
+              <tr>
+                <td>5</td>
+                <td>Host -&gt; Model</td>
+                <td><code>role=tool, tool_call_id=call_demo_status, content=status JSON</code></td>
+              </tr>
+              <tr>
+                <td>6</td>
+                <td>Model -&gt; User</td>
+                <td><code>payments-api is degraded; database failover is in progress.</code></td>
+              </tr>
+            </tbody>
+          </table>
+          <p class="callout">The model never executes the tool. The host does, then reports the result back.</p>
+        `
+      }
+    ]
   },
   {
     html: `
@@ -204,12 +249,25 @@ just check</code></pre>
   }
 ];
 
-const renderSlide = (slide: Slide): string => `
+const renderSlideContent = (slide: Slide): string => `
   <section${slide.className ? ` class="${slide.className}"` : ""}>
     ${slide.html}
     ${slide.notes ? `<aside class="notes">${slide.notes}</aside>` : ""}
   </section>
 `;
+
+const renderSlide = (slide: Slide): string => {
+  if (!slide.children?.length) {
+    return renderSlideContent(slide);
+  }
+
+  return `
+    <section>
+      ${renderSlideContent(slide)}
+      ${slide.children.map(renderSlide).join("\n")}
+    </section>
+  `;
+};
 
 const slidesElement = document.querySelector<HTMLDivElement>("#slides");
 

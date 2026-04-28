@@ -181,3 +181,34 @@
   font-size: 0.56em;
   line-height: 1.25;
 }
+
+.message-flow-slide .callout {
+  font-size: 0.48em;
+  margin-top: 0.7rem;
+  padding: 0.7rem;
+}
+
+.message-table th,
+.message-table td {
+  font-size: 0.44em;
+  padding: 0.38rem 0.5rem;
+  vertical-align: top;
+}
+
+.message-table td:first-child {
+  color: var(--accent);
+  font-weight: 800;
+  width: 3rem;
+}
+
+.message-table td:nth-child(2) {
+  color: #c9d1d9;
+  white-space: nowrap;
+  width: 9rem;
+}
+
+.message-table code {
+  color: #d2a8ff;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
