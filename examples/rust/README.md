@@ -28,18 +28,20 @@ The core crate intentionally names the same concepts used in the slides:
 ## Dry-run demos
 
 ```sh
-cargo run --manifest-path examples/rust/Cargo.toml -p genai-tool-basic -- --dry-run
-cargo run --manifest-path examples/rust/Cargo.toml -p genai-tool-roundtrip -- --dry-run
-cargo run --manifest-path examples/rust/Cargo.toml -p mini-copilot-cli -- --dry-run demo agent-loop
-cargo run --manifest-path examples/rust/Cargo.toml -p mini-copilot-cli -- --dry-run demo hooks
+just rust-demo list
+just rust-demo genai-tool-basic
+just rust-demo genai-tool-roundtrip
+just rust-demo mini-copilot-agent-loop
+just rust-demo mini-copilot-hooks
+just rust-demo mini-copilot-ask
 ```
 
 ## Veto demo
 
-This command intentionally exits with a non-zero status because the simulated user denies local file access before the `read_file` tool can run:
+This command simulates a user denying local file access before the `read_file` tool can run. The underlying CLI returns a denial error; the `just` recipe treats that expected denial as a successful demo.
 
 ```sh
-cargo run --manifest-path examples/rust/Cargo.toml -p mini-copilot-cli -- --dry-run --veto-file-access ask "Summarize service_status.md"
+just rust-demo mini-copilot-veto
 ```
 
 ## Live rust-genai demos
@@ -48,23 +50,27 @@ cargo run --manifest-path examples/rust/Cargo.toml -p mini-copilot-cli -- --dry-
 export OPENAI_API_KEY=...
 export OPENAI_MODEL=gpt-4.1-mini
 
-cargo run --manifest-path examples/rust/Cargo.toml -p genai-tool-basic
-cargo run --manifest-path examples/rust/Cargo.toml -p genai-tool-roundtrip
+just rust-demo genai-tool-basic-live
+just rust-demo genai-tool-roundtrip-live
 ```
 
 ## HTTP mini-agent
 
+Start the dry-run server in one terminal:
+
 ```sh
-cargo run --manifest-path examples/rust/Cargo.toml -p mini-copilot-http -- --dry-run
-curl -sS http://127.0.0.1:3000/health
-curl -sS -X POST http://127.0.0.1:3000/demo/agent-loop
-curl -sS -X POST http://127.0.0.1:3000/demo/hooks
-curl -sS http://127.0.0.1:3000/ask \
-  -H 'Content-Type: application/json' \
-  -d '{"prompt":"Summarize service_status.md"}'
-curl -sS http://127.0.0.1:3000/ask \
-  -H 'Content-Type: application/json' \
-  -d '{"prompt":"Summarize service_status.md","veto_file_access":true}'
+just rust-demo mini-copilot-http
+```
+
+Then run endpoint demos from another terminal:
+
+```sh
+just http-demo list
+just http-demo health
+just http-demo agent-loop
+just http-demo hooks
+just http-demo ask
+just http-demo veto
 ```
 
 The mini-agent uses a scoped fixture workspace so file tools cannot read or write outside `examples/rust/fixtures/workspace`.

@@ -723,8 +723,7 @@ let next_req = req
           <div class="walkthrough-grid local-file-grid">
             <article class="source-card">
               <h3>Allowed flow</h3>
-              <pre><code>mini-copilot-cli --dry-run ask \\
-  "Summarize service_status.md"
+              <pre><code>just rust-demo mini-copilot-ask
 
 plan_tool_call(prompt)
   -&gt; read_file({"path":"service_status.md"})
@@ -735,9 +734,7 @@ then returns file content.</code></pre>
             </article>
             <article class="source-card">
               <h3>Veto flow</h3>
-              <pre><code>mini-copilot-cli --dry-run \\
-  --veto-file-access ask \\
-  "Summarize service_status.md"
+              <pre><code>just rust-demo mini-copilot-veto
 
 POST /ask
 {
@@ -761,8 +758,8 @@ POST /ask
       <h2>Mini-agent surfaces</h2>
       <div class="cards">
         <article><h3>Core crate</h3><p>Agent loop, hook registry, tool registry, transcript.</p></article>
-        <article><h3>CLI</h3><p><code>mini-copilot ask "summarize"</code></p></article>
-        <article><h3>HTTP</h3><p><code>POST /ask</code>, <code>POST /demo/hooks</code>, <code>GET /health</code></p></article>
+        <article><h3>CLI</h3><p><code>just rust-demo mini-copilot-ask</code></p></article>
+        <article><h3>HTTP</h3><p><code>just http-demo ask</code>, <code>just http-demo hooks</code>, <code>just http-demo health</code></p></article>
       </div>
     `,
     notes: speakerNotes(
@@ -776,8 +773,9 @@ POST /ask
       <h2>Run it locally</h2>
       <pre><code>just install
 just slides
+just rust-demo list
 just curl-dry-run 03-tool-result-roundtrip
-just rust-demo mini-copilot-cli
+just rust-demo mini-copilot-veto
 just check</code></pre>
       <p class="callout">Live model calls are optional; dry-run mode keeps the workshop deterministic.</p>
     `,

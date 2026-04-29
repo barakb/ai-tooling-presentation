@@ -11,6 +11,7 @@ Each script supports:
 ## Run dry-run examples
 
 ```sh
+just curl-dry-run list
 just curl-dry-run 01-basic-chat
 just curl-dry-run 02-tool-schema
 just curl-dry-run 03-tool-result-roundtrip
@@ -22,6 +23,7 @@ just curl-dry-run 03-tool-result-roundtrip
 export OPENAI_API_KEY=...
 export OPENAI_MODEL=gpt-4.1-mini
 
+just curl-demo list
 just curl-demo 01-basic-chat
 just curl-demo 02-tool-schema
 just curl-demo 03-tool-result-roundtrip

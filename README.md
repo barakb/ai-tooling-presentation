@@ -43,18 +43,23 @@ Use this sequence for a live walkthrough:
 3. Move down from the provider comparison slide to show the full OpenAI, Claude, and Gemini JSON message shapes.
 4. Run `just curl-dry-run 03-tool-result-roundtrip` while presenting the OpenAI REST flow. Switch to `just curl-demo 03-tool-result-roundtrip` only when `OPENAI_API_KEY` has quota.
 5. Move down from the rust-genai slide to inspect the linked `genai` source files and provider adapters.
-6. Run the Rust dry-run demos, then show the mini-agent local-file and veto slides.
+6. Run `just rust-demo list`, then use `just rust-demo mini-copilot-ask` and `just rust-demo mini-copilot-veto` while showing the mini-agent local-file and veto slides.
 7. Finish with `just check` to show the repository has deterministic, non-network validation.
 
 ## Demo commands
 
 ```sh
+just curl-dry-run list
 just curl-dry-run 01-basic-chat
 just curl-dry-run 02-tool-schema
 just curl-dry-run 03-tool-result-roundtrip
+just rust-demo list
 just rust-demo genai-tool-basic
 just rust-demo genai-tool-roundtrip
-just rust-demo mini-copilot-cli
+just rust-demo mini-copilot-agent-loop
+just rust-demo mini-copilot-hooks
+just rust-demo mini-copilot-ask
+just rust-demo mini-copilot-veto
 just check
 ```
 
@@ -64,6 +69,17 @@ For live OpenAI demos:
 export OPENAI_API_KEY=...
 export OPENAI_MODEL=gpt-4.1-mini
 just curl-demo 02-tool-schema
+just rust-demo genai-tool-basic-live
+```
+
+For the HTTP mini-agent demo, start the server in one terminal and run endpoint demos from another:
+
+```sh
+just rust-demo mini-copilot-http
+just http-demo list
+just http-demo health
+just http-demo ask
+just http-demo veto
 ```
 
 ## Documentation
