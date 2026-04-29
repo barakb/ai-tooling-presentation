@@ -135,6 +135,16 @@
   margin-top: 1.2rem;
 }
 
+.source-link-row {
+  color: #c9d1d9;
+  font-size: 0.48em !important;
+  margin-top: 0.7rem;
+}
+
+.source-link-row a {
+  color: var(--accent);
+}
+
 .split {
   display: grid;
   gap: 2rem;

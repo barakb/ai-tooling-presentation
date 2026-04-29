@@ -55,6 +55,12 @@ pub struct HookEvent {
     pub message: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct HookContext {
+    pub point: HookPoint,
+    pub message: String,
+}
+
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Transcript {
     pub events: Vec<HookEvent>,
@@ -77,7 +83,7 @@ impl Transcript {
 
 pub trait Hook: Send + Sync {
     fn name(&self) -> &'static str;
-    fn call(&self, point: HookPoint, message: &str, transcript: &mut Transcript) -> Result<()>;
+    fn call(&self, context: &HookContext, transcript: &mut Transcript) -> Result<()>;
 }
 
 #[derive(Debug, Default)]
@@ -88,8 +94,8 @@ impl Hook for TraceHook {
         "trace"
     }
 
-    fn call(&self, point: HookPoint, message: &str, transcript: &mut Transcript) -> Result<()> {
-        transcript.record(point, self.name(), message);
+    fn call(&self, context: &HookContext, transcript: &mut Transcript) -> Result<()> {
+        transcript.record(context.point.clone(), self.name(), context.message.clone());
         Ok(())
     }
 }
@@ -111,8 +117,13 @@ impl HookRegistry {
     }
 
     pub fn emit(&self, point: HookPoint, message: &str, transcript: &mut Transcript) -> Result<()> {
+        let context = HookContext {
+            point,
+            message: message.to_string(),
+        };
+
         for hook in &self.hooks {
-            hook.call(point.clone(), message, transcript)?;
+            hook.call(&context, transcript)?;
         }
         Ok(())
     }
@@ -136,6 +147,19 @@ pub struct AgentResponse {
     pub selected_tool: ToolCall,
     pub tool_result: ToolResult,
     pub transcript: Transcript,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct Conversation {
+    pub user_prompt: String,
+}
+
+impl Conversation {
+    pub fn from_user(prompt: impl Into<String>) -> Self {
+        Self {
+            user_prompt: prompt.into(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
@@ -330,12 +354,12 @@ impl ToolRegistry {
     }
 }
 
-pub struct Agent {
+pub struct AgentLoop {
     hooks: HookRegistry,
     tools: ToolRegistry,
 }
 
-impl Agent {
+impl AgentLoop {
     pub fn new(workspace: impl Into<PathBuf>) -> Result<Self> {
         Ok(Self {
             hooks: HookRegistry::with_default_hooks(),
@@ -343,12 +367,9 @@ impl Agent {
         })
     }
 
-    pub fn ask(&self, prompt: &str) -> Result<AgentResponse> {
-        self.ask_with_policy(prompt, AgentPolicy::default())
-    }
-
-    pub fn ask_with_policy(&self, prompt: &str, policy: AgentPolicy) -> Result<AgentResponse> {
+    pub fn run(&self, conversation: &Conversation, policy: AgentPolicy) -> Result<AgentResponse> {
         let mut transcript = Transcript::default();
+        let prompt = conversation.user_prompt.as_str();
 
         self.hooks.emit(
             HookPoint::BeforeModel,
@@ -413,6 +434,31 @@ impl Agent {
 
     pub fn genai_tools(&self) -> Vec<Tool> {
         self.tools.genai_tools()
+    }
+}
+
+pub struct Agent {
+    loop_runner: AgentLoop,
+}
+
+impl Agent {
+    pub fn new(workspace: impl Into<PathBuf>) -> Result<Self> {
+        Ok(Self {
+            loop_runner: AgentLoop::new(workspace)?,
+        })
+    }
+
+    pub fn ask(&self, prompt: &str) -> Result<AgentResponse> {
+        self.ask_with_policy(prompt, AgentPolicy::default())
+    }
+
+    pub fn ask_with_policy(&self, prompt: &str, policy: AgentPolicy) -> Result<AgentResponse> {
+        let conversation = Conversation::from_user(prompt);
+        self.loop_runner.run(&conversation, policy)
+    }
+
+    pub fn genai_tools(&self) -> Vec<Tool> {
+        self.loop_runner.genai_tools()
     }
 }
 

@@ -12,12 +12,26 @@ This workspace contains Rust demos for the presentation.
 | `mini-copilot-cli` | CLI surface for the mini-agent. |
 | `mini-copilot-http` | HTTP API surface for the mini-agent. |
 
+## Mini-agent teaching model
+
+The core crate intentionally names the same concepts used in the slides:
+
+| Concept | Where to look | Role |
+| --- | --- | --- |
+| `Conversation` | `mini-copilot-core/src/lib.rs` | Carries the user's prompt into the loop. |
+| `AgentLoop` | `mini-copilot-core/src/lib.rs` | Runs planning, hooks, policy checks, tool execution, and summarization. |
+| `HookContext` | `mini-copilot-core/src/lib.rs` | Describes each hook event before it is recorded in the transcript. |
+| `HookRegistry` | `mini-copilot-core/src/lib.rs` | Calls registered hooks at each loop point. |
+| `ToolRegistry` | `mini-copilot-core/src/lib.rs` | Exposes schemas and executes scoped file tools. |
+| `Transcript` | `mini-copilot-core/src/lib.rs` | Captures visible hook events for demos and tests. |
+
 ## Dry-run demos
 
 ```sh
 cargo run --manifest-path examples/rust/Cargo.toml -p genai-tool-basic -- --dry-run
 cargo run --manifest-path examples/rust/Cargo.toml -p genai-tool-roundtrip -- --dry-run
 cargo run --manifest-path examples/rust/Cargo.toml -p mini-copilot-cli -- --dry-run demo agent-loop
+cargo run --manifest-path examples/rust/Cargo.toml -p mini-copilot-cli -- --dry-run demo hooks
 ```
 
 ## Veto demo
@@ -43,6 +57,8 @@ cargo run --manifest-path examples/rust/Cargo.toml -p genai-tool-roundtrip
 ```sh
 cargo run --manifest-path examples/rust/Cargo.toml -p mini-copilot-http -- --dry-run
 curl -sS http://127.0.0.1:3000/health
+curl -sS -X POST http://127.0.0.1:3000/demo/agent-loop
+curl -sS -X POST http://127.0.0.1:3000/demo/hooks
 curl -sS http://127.0.0.1:3000/ask \
   -H 'Content-Type: application/json' \
   -d '{"prompt":"Summarize service_status.md"}'

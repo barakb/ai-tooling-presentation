@@ -14,6 +14,17 @@ interface Slide {
   children?: Slide[];
 }
 
+const copilotAgentLoopDocs =
+  "https://github.com/github/copilot-sdk/blob/main/docs/features/agent-loop.md";
+const copilotHooksDocs =
+  "https://github.com/github/copilot-sdk/blob/main/docs/features/hooks.md";
+
+const speakerNotes = (...items: string[]): string => `
+  <ul>
+    ${items.map((item) => `<li>${item}</li>`).join("")}
+  </ul>
+`;
+
 const slides: Slide[] = [
   {
     className: "title-slide",
@@ -23,8 +34,10 @@ const slides: Slide[] = [
       <p class="subtitle">From raw REST calls to a mini Copilot-style agent in Rust</p>
       <p class="meta">Reveal.js + curl + rust-genai</p>
     `,
-    notes:
-      "Set the promise: this is not a high-level AI talk. We will look at the wire format, then build up to an agent loop."
+    notes: speakerNotes(
+      "Set the promise: this is not a high-level AI talk. We will look at the wire format, then build up to an agent loop.",
+      "Rubber duck review: say what the audience will be able to do by the end: read provider JSON, run curl demos, and recognize the same loop in Rust."
+    )
   },
   {
     html: `
@@ -34,7 +47,11 @@ const slides: Slide[] = [
         <article><h3>2. Provider syntax</h3><p>OpenAI runnable examples, plus Claude and Gemini comparisons.</p></article>
         <article><h3>3. Rust implementation</h3><p>rust-genai examples and a mini Copilot-style API.</p></article>
       </div>
-    `
+    `,
+    notes: speakerNotes(
+      "Frame the talk as three layers: concept, wire format, implementation.",
+      "Point out that OpenAI is runnable here, while Claude and Gemini are syntax comparisons so the presentation stays focused and reliable."
+    )
   },
   {
     html: `
@@ -45,7 +62,11 @@ const slides: Slide[] = [
         <li>The host application keeps authority: validation, execution, policy, logging, and final UX.</li>
       </ul>
       <p class="callout">The model suggests. The host decides and executes.</p>
-    `
+    `,
+    notes: speakerNotes(
+      "Use this slide to separate model intelligence from host authority.",
+      "Rubber duck review: if a model asks to read a file, where does permission, path validation, and logging happen? Answer: in host code, not in the model."
+    )
   },
   {
     html: `
@@ -58,9 +79,13 @@ const slides: Slide[] = [
         <li>Tool results go back to the model.</li>
         <li>Loop continues until final answer.</li>
       </ol>
+      <p class="source-link-row"><a href="${copilotAgentLoopDocs}" target="_blank" rel="noreferrer">Copilot SDK agent loop docs</a></p>
     `,
-    notes:
-      "Rubber duck review: can we explain every box without saying magic? The important point is that tool execution is outside the model."
+    notes: speakerNotes(
+      "Walk the diagram clockwise and name the owner of each step: user, model, host, tool, model again.",
+      "Rubber duck review: can we explain every box without saying magic? The important point is that tool execution is outside the model.",
+      "Call out the linked Copilot SDK doc as the conceptual source for the loop."
+    )
   },
   {
     className: "compact-slide",
@@ -80,7 +105,13 @@ const slides: Slide[] = [
           <li>Before final response</li>
         </ul>
       </div>
-    `
+      <p class="source-link-row"><a href="${copilotHooksDocs}" target="_blank" rel="noreferrer">Copilot SDK hooks docs</a></p>
+    `,
+    notes: speakerNotes(
+      "Explain hooks as product and platform control points, not just callbacks.",
+      "Use the lifecycle positions to show where teams can add policy, tracing, confirmation, and eval capture without changing every tool implementation.",
+      "Rubber duck review: ask which hook would catch a dangerous file write before it runs."
+    )
   },
   {
     html: `
@@ -94,7 +125,12 @@ const slides: Slide[] = [
           <tr><td>After tool</td><td>Log result shape, update metrics, summarize errors.</td></tr>
         </tbody>
       </table>
-    `
+    `,
+    notes: speakerNotes(
+      "Move from lifecycle names to practical engineering behavior.",
+      "Connect before-tool policy to the later veto demo and path-scoped file tools.",
+      "Rubber duck review: each example should answer what risk or operational need it handles."
+    )
   },
   {
     html: `
@@ -111,7 +147,12 @@ const slides: Slide[] = [
   }
 }</code></pre>
       <p class="callout">A schema guides the model. Your code still validates everything.</p>
-    `
+    `,
+    notes: speakerNotes(
+      "Name the three parts: tool name, natural-language description, JSON schema.",
+      "Emphasize that JSON schema improves model behavior but is not a security boundary.",
+      "Rubber duck review: the host must validate the actual arguments because they are model output."
+    )
   },
   {
     html: `
@@ -126,8 +167,11 @@ const slides: Slide[] = [
         </tbody>
       </table>
     `,
-    notes:
+    notes: speakerNotes(
       "Keep this as a translation table. Do not imply exact feature parity between providers.",
+      "Use the table to create a stable vocabulary before diving into provider-specific JSON.",
+      "Rubber duck review: the same host responsibilities remain even when the field names change."
+    ),
     children: [
       {
         className: "compact-slide provider-example-slide",
@@ -189,7 +233,12 @@ const slides: Slide[] = [
 }</code></pre>
             </article>
           </div>
-        `
+        `,
+        notes: speakerNotes(
+          "Walk left to right: request with tools, assistant tool call, host tool result.",
+          "Point out that OpenAI function arguments arrive as a JSON string, so the host must parse and validate them.",
+          "Rubber duck review: where is get_service_status implemented? It is host code; the JSON only advertises the contract."
+        )
       },
       {
         className: "compact-slide provider-example-slide",
@@ -251,7 +300,12 @@ const slides: Slide[] = [
 }</code></pre>
             </article>
           </div>
-        `
+        `,
+        notes: speakerNotes(
+          "Contrast Claude's content blocks with OpenAI's assistant/tool messages.",
+          "The model emits a tool_use block and the host answers with a tool_result block tied to the tool_use_id.",
+          "Rubber duck review: do not claim the Claude shape is interchangeable with OpenAI; the shared idea is the loop, not the exact JSON."
+        )
       },
       {
         className: "compact-slide provider-example-slide",
@@ -328,7 +382,12 @@ const slides: Slide[] = [
 }</code></pre>
             </article>
           </div>
-        `
+        `,
+        notes: speakerNotes(
+          "Contrast Gemini's functionDeclarations, functionCall, and functionResponse terms.",
+          "Highlight that Gemini uses parts inside contents, so the host has to preserve that provider-specific envelope.",
+          "Rubber duck review: the host still validates args and executes the local service-status function."
+        )
       }
     ]
   },
@@ -345,6 +404,11 @@ const slides: Slide[] = [
       <pre><code>just curl-dry-run 03-tool-result-roundtrip
 OPENAI_API_KEY=... just curl-demo 03-tool-result-roundtrip</code></pre>
     `,
+    notes: speakerNotes(
+      "This is the first runnable bridge from slides to terminal.",
+      "Start with dry-run because it prints the payload deterministically; only run live mode if the key and quota are ready.",
+      "Rubber duck review: every bullet should map to one message in the next vertical slide and to the curl script."
+    ),
     children: [
       {
         className: "compact-slide message-flow-slide",
@@ -382,7 +446,12 @@ OPENAI_API_KEY=... just curl-demo 03-tool-result-roundtrip</code></pre>
             </article>
           </div>
           <p class="callout">The model can only request the tool. The host owns the definition, validation, execution, and returned result.</p>
-        `
+        `,
+        notes: speakerNotes(
+          "Make the missing piece explicit: get_service_status is defined by the host before the model call.",
+          "Trace the participant messages in order and remind the audience that the tool result is not generated by the model.",
+          "Rubber duck review: if the model invents a different service name or malformed JSON, the host must reject or correct it."
+        )
       }
     ]
   },
@@ -420,6 +489,11 @@ let response =
       </div>
       <p class="callout">The SDK changes the ergonomics; the contract is still the same schema the REST call sends to the model.</p>
     `,
+    notes: speakerNotes(
+      "Show that rust-genai does not remove the schema contract; it gives Rust builders around it.",
+      "Connect Tool::new and with_schema directly back to the REST tools array.",
+      "Rubber duck review: ask what still has to be validated after the model asks for a tool."
+    ),
     children: [
       {
         className: "compact-slide code-walkthrough-slide",
@@ -462,7 +536,12 @@ pub fn with_tools&lt;I&gt;(mut self, tools: I) -&gt; Self {
             </article>
           </div>
           <p class="callout">genai normalizes the Rust API, then each provider adapter serializes these common structs into OpenAI, Claude, Gemini, etc.</p>
-        `
+        `,
+        notes: speakerNotes(
+          "Use the docs.rs links as source-code anchors, not just references.",
+          "Explain that Tool and ChatRequest are provider-neutral structs in the genai API.",
+          "Rubber duck review: the SDK hides provider serialization, but it does not make tools run automatically."
+        )
       },
       {
         className: "compact-slide code-walkthrough-slide",
@@ -521,7 +600,12 @@ tools.push(json!({
             </article>
           </div>
           <p class="callout">This is why the same <code>Tool</code> object becomes <code>tools[].function</code>, <code>input_schema</code>, or <code>functionDeclarations</code> depending on the adapter.</p>
-        `
+        `,
+        notes: speakerNotes(
+          "This slide answers the internal implementation question: common Tool in, provider JSON out.",
+          "Compare the three snippets against the provider JSON slides from earlier.",
+          "Rubber duck review: if a provider changes its envelope, the adapter changes, not every caller."
+        )
       },
       {
         className: "compact-slide code-walkthrough-slide",
@@ -562,7 +646,12 @@ let result = run_host_tool(&tool_calls[0])?;
 let next_req = req
   .append_message(tool_calls)
   .append_message(ToolResponse::new(call_id, result));</code></pre>
-        `
+        `,
+        notes: speakerNotes(
+          "Explain the second half of the loop: receive ToolCall, run host code, build ToolResponse.",
+          "Point to ToolCall.fn_arguments as untrusted model output and ToolResponse.content as host-produced data.",
+          "Rubber duck review: the model never executes the function; the host does and then returns the result."
+        )
       }
     ]
   },
@@ -572,6 +661,11 @@ let next_req = req
       <img class="diagram" src="${miniCopilotDiagram}" alt="Mini Copilot architecture diagram" />
       <p>Small enough to teach, real enough to demonstrate the agent loop and hooks.</p>
     `,
+    notes: speakerNotes(
+      "Now move from provider mechanics to an intentionally small SDK-like design.",
+      "Name the boundaries: CLI/HTTP entry points, Agent, AgentLoop, ToolRegistry, HookRegistry, and scoped workspace.",
+      "Rubber duck review: the demo is not a full Copilot clone; it is a teaching model of the same loop and controls."
+    ),
     children: [
       {
         className: "compact-slide code-walkthrough-slide",
@@ -593,21 +687,34 @@ let next_req = req
 }</code></pre>
             </article>
             <article class="source-card">
-              <h3>Agent loop owns execution</h3>
+              <h3>AgentLoop owns execution</h3>
               <p class="source-path">mini-copilot-core/src/lib.rs</p>
-              <pre><code>let selected_tool = plan_tool_call(prompt);
-hooks.emit(BeforeTool, "requesting approval", tx)?;
+              <pre><code>pub fn run(
+  &self,
+  conversation: &Conversation,
+  policy: AgentPolicy
+) -&gt; Result&lt;AgentResponse&gt; {
+  let selected_tool =
+    plan_tool_call(&conversation.user_prompt);
 
-if policy.veto_file_access
-  && requires_file_access(&selected_tool.name) {
-  return Err(AgentError::AccessDenied(...));
-}
+  hooks.emit(BeforeTool, "request approval", tx)?;
 
-let tool_result = tools.execute(&selected_tool)?;</code></pre>
+  if policy.veto_file_access
+    && requires_file_access(&selected_tool.name) {
+    return Err(AgentError::AccessDenied(...));
+  }
+
+  let tool_result = tools.execute(&selected_tool)?;
+}</code></pre>
             </article>
           </div>
           <p class="callout">The mini SDK mirrors the real agent boundary: model selects intent, host policy approves, host tool registry executes.</p>
-        `
+        `,
+        notes: speakerNotes(
+          "Show how the Rust code exposes tool schemas and then keeps execution in the host.",
+          "Mention the teaching types: Conversation carries the prompt, AgentLoop runs the sequence, HookContext describes each hook event.",
+          "Rubber duck review: identify where approval happens before the tool registry executes the selected tool."
+        )
       },
       {
         className: "compact-slide code-walkthrough-slide",
@@ -640,7 +747,12 @@ POST /ask
             </article>
           </div>
           <p class="callout">The veto happens before the file tool runs, so no local file content is read or returned when the user denies access.</p>
-        `
+        `,
+        notes: speakerNotes(
+          "This is the safety story for local context: path scope plus explicit user veto.",
+          "For the allowed flow, explain canonicalization and symlink rejection before reading the file.",
+          "For the veto flow, stress that the error happens before file content is accessed."
+        )
       }
     ]
   },
@@ -652,7 +764,12 @@ POST /ask
         <article><h3>CLI</h3><p><code>mini-copilot ask "summarize"</code></p></article>
         <article><h3>HTTP</h3><p><code>POST /ask</code>, <code>POST /demo/hooks</code>, <code>GET /health</code></p></article>
       </div>
-    `
+    `,
+    notes: speakerNotes(
+      "Summarize the three consumption surfaces: library, command line, and HTTP API.",
+      "Point out that all surfaces share the same core agent loop and scoped file tools.",
+      "Rubber duck review: if behavior changes, it should change in mini-copilot-core, not separately in CLI and HTTP."
+    )
   },
   {
     html: `
@@ -663,7 +780,12 @@ just curl-dry-run 03-tool-result-roundtrip
 just rust-demo mini-copilot-cli
 just check</code></pre>
       <p class="callout">Live model calls are optional; dry-run mode keeps the workshop deterministic.</p>
-    `
+    `,
+    notes: speakerNotes(
+      "Use these commands as the presenter checklist before the session.",
+      "Dry-run commands are the reliable path for rehearsals and CI; live calls are optional and depend on provider quota.",
+      "Rubber duck review: if live OpenAI fails, the presentation still works because the dry-run demos and Rust mini-agent are deterministic."
+    )
   },
   {
     className: "title-slide",
@@ -671,7 +793,11 @@ just check</code></pre>
       <p class="eyebrow">Takeaway</p>
       <h2>Agents are loops, tools are contracts, hooks are control.</h2>
       <p class="subtitle">Once the mechanism is clear, the implementation becomes ordinary software engineering.</p>
-    `
+    `,
+    notes: speakerNotes(
+      "Close by restating the three core ideas: loops coordinate, tools define contracts, hooks enforce control.",
+      "Invite the audience to inspect the source links and run the deterministic demos after the session."
+    )
   }
 ];
 

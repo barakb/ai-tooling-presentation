@@ -36,3 +36,13 @@ just curl-demo 03-tool-result-roundtrip
 | `03-tool-result-roundtrip.sh` | Shows the second half of the loop: host returns a tool result and asks for the final answer. |
 
 The output can vary by model. The important structure is whether the response contains normal assistant text, a `tool_calls` array, or final text grounded in a tool result.
+
+See [`expected-output/README.md`](expected-output/README.md) for the response shapes to validate during a demo.
+
+## Live-mode troubleshooting
+
+| Error | Cause | Fix |
+| --- | --- | --- |
+| `OPENAI_API_KEY is required for live mode` | No API key is exported. | Export `OPENAI_API_KEY` or run the same script with `--dry-run`. |
+| `model_not_found` | `OPENAI_MODEL` points at a model the key cannot access. | Use `export OPENAI_MODEL=gpt-4.1-mini` or unset `OPENAI_MODEL`. |
+| `insufficient_quota` | The OpenAI project has no remaining quota or billing. | Use dry-run mode, add quota/billing, or switch to a project key with quota. |
