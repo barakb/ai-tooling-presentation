@@ -769,21 +769,89 @@ POST /ask
     )
   },
   {
+    className: "compact-slide just-options-slide",
     html: `
-      <h2>Run it locally</h2>
-      <pre><code>just install
-just slides
-just rust-demo list
-just curl-dry-run 03-tool-result-roundtrip
-just rust-demo mini-copilot-veto
-just check</code></pre>
-      <p class="callout">Live model calls are optional; dry-run mode keeps the workshop deterministic.</p>
+      <h2>Run it locally: all just recipes</h2>
+      <div class="just-command-grid">
+        <article>
+          <h3>Slides</h3>
+          <code>just install</code>
+          <code>just slides</code>
+          <code>just build-slides</code>
+          <code>just preview</code>
+        </article>
+        <article>
+          <h3>OpenAI curl</h3>
+          <code>just curl-demo list</code>
+          <code>just curl-demo &lt;name&gt;</code>
+          <code>just curl-dry-run list</code>
+          <code>just curl-dry-run &lt;name&gt;</code>
+        </article>
+        <article>
+          <h3>Rust</h3>
+          <code>just rust-build</code>
+          <code>just rust-test</code>
+          <code>just rust-demo list</code>
+          <code>just rust-demo &lt;name&gt;</code>
+          <code>just rust-http</code>
+        </article>
+        <article>
+          <h3>HTTP + checks</h3>
+          <code>just http-demo list</code>
+          <code>just http-demo &lt;name&gt;</code>
+          <code>just check</code>
+        </article>
+      </div>
+      <p class="callout">Use <code>list</code> to discover the concrete demo names. Live model calls are optional; dry-run mode keeps the workshop deterministic.</p>
     `,
     notes: speakerNotes(
-      "Use these commands as the presenter checklist before the session.",
-      "Dry-run commands are the reliable path for rehearsals and CI; live calls are optional and depend on provider quota.",
-      "Rubber duck review: if live OpenAI fails, the presentation still works because the dry-run demos and Rust mini-agent are deterministic."
-    )
+      "This slide should match the top-level justfile recipes so the presenter can discover every runnable path from one place.",
+      "Explain that recipes with <name> are parameterized and that the vertical child slide lists the valid demo names.",
+      "Rubber duck review: if a new demo is added later, either the list command or this slide must be updated so docs and slides do not drift."
+    ),
+    children: [
+      {
+        className: "compact-slide just-options-slide",
+        html: `
+          <h2>Demo option names</h2>
+          <div class="just-demo-grid">
+            <article>
+              <h3><code>just curl-demo &lt;name&gt;</code></h3>
+              <code>01-basic-chat</code>
+              <code>02-tool-schema</code>
+              <code>03-tool-result-roundtrip</code>
+            </article>
+            <article>
+              <h3><code>just rust-demo &lt;name&gt;</code></h3>
+              <code>genai-tool-basic</code>
+              <code>genai-tool-roundtrip</code>
+              <code>genai-tool-basic-live</code>
+              <code>genai-tool-roundtrip-live</code>
+              <code>mini-copilot-agent-loop</code>
+              <code>mini-copilot-hooks</code>
+              <code>mini-copilot-ask</code>
+              <code>mini-copilot-veto</code>
+              <code>mini-copilot-http</code>
+              <code>mini-copilot-cli</code>
+            </article>
+            <article>
+              <h3><code>just http-demo &lt;name&gt;</code></h3>
+              <code>health</code>
+              <code>agent-loop</code>
+              <code>hooks</code>
+              <code>ask</code>
+              <code>veto</code>
+            </article>
+          </div>
+          <p class="callout">Start the HTTP server first with <code>just rust-demo mini-copilot-http</code>, then run the <code>just http-demo</code> commands from another terminal.</p>
+        `,
+        notes: speakerNotes(
+          "Use this vertical slide when someone asks what exact names can replace <name>.",
+          "Call out that live rust-genai options require OPENAI_API_KEY and quota, while the default Rust and curl demos are dry-run safe.",
+          "The veto option is expected to deny file access; the just recipe treats that denial as a successful demo."
+        )
+      }
+    ]
   },
   {
     className: "title-slide",
