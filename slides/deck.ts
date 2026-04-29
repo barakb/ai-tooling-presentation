@@ -14,16 +14,543 @@ interface Slide {
   children?: Slide[];
 }
 
+interface DemoTranscript {
+  id: string;
+  command: string;
+  title: string;
+  diagram: string;
+  steps: string[];
+  callout: string;
+}
+
 const copilotAgentLoopDocs =
   "https://github.com/github/copilot-sdk/blob/main/docs/features/agent-loop.md";
 const copilotHooksDocs =
   "https://github.com/github/copilot-sdk/blob/main/docs/features/hooks.md";
+const runItLocallySlideHash = "#/12";
 
 const speakerNotes = (...items: string[]): string => `
   <ul>
     ${items.map((item) => `<li>${item}</li>`).join("")}
   </ul>
 `;
+
+const demoTranscripts: DemoTranscript[] = [
+  {
+    id: "01-basic-chat",
+    command: "just curl-dry-run 01-basic-chat",
+    title: "01-basic-chat",
+    diagram: `sequenceDiagram
+  autonumber
+  participant User
+  participant Host
+  participant OpenAI
+  participant Terminal
+  User->>Host: Ask a simple question
+  Host->>OpenAI: messages only, no tools
+  OpenAI-->>Host: assistant content
+  Host-->>Terminal: JSON response shape`,
+    steps: [
+      "The user prompt is wrapped as a single Chat Completions message.",
+      "The host sends no tool schema, so the model can only answer with text.",
+      "The terminal output demonstrates the normal assistant-message response shape."
+    ],
+    callout: "Baseline demo: one user message, one model answer, no tool loop yet."
+  },
+  {
+    id: "02-tool-schema",
+    command: "just curl-dry-run 02-tool-schema",
+    title: "02-tool-schema",
+    diagram: `sequenceDiagram
+  autonumber
+  participant User
+  participant Host
+  participant OpenAI
+  participant Terminal
+  User->>Host: Is payments-api healthy?
+  Host->>OpenAI: messages plus get_service_status schema
+  OpenAI-->>Host: assistant tool_call
+  Host-->>Terminal: tool_calls JSON, no execution yet`,
+    steps: [
+      "The host defines get_service_status with a JSON schema.",
+      "The model responds with a requested tool call and arguments.",
+      "The script stops at the tool-call boundary so the raw provider shape is visible."
+    ],
+    callout: "This shows model intent, not tool execution; the host still owns validation and execution."
+  },
+  {
+    id: "03-tool-result-roundtrip",
+    command: "just curl-dry-run 03-tool-result-roundtrip",
+    title: "03-tool-result-roundtrip",
+    diagram: `sequenceDiagram
+  autonumber
+  participant User
+  participant Host
+  participant Tool
+  participant OpenAI
+  User->>Host: Is payments-api healthy?
+  Host->>Tool: get_service_status(payments-api)
+  Tool-->>Host: degraded status JSON
+  Host->>OpenAI: prior tool_call plus role=tool result
+  OpenAI-->>Host: final grounded answer`,
+    steps: [
+      "The host simulates running get_service_status for payments-api.",
+      "The tool result is returned as a provider-specific tool message.",
+      "The model produces final text grounded in the tool result."
+    ],
+    callout: "Full REST round trip: host tool result goes back to the model before the final answer."
+  },
+  {
+    id: "genai-tool-basic",
+    command: "just rust-demo genai-tool-basic",
+    title: "genai-tool-basic",
+    diagram: `sequenceDiagram
+  autonumber
+  participant CLI
+  participant RustHost
+  participant GenAI
+  participant Model
+  CLI->>RustHost: run dry-run schema demo
+  RustHost->>GenAI: Tool::new plus ChatRequest::with_tools
+  GenAI->>Model: provider-specific tool JSON
+  Model-->>GenAI: requested ToolCall
+  GenAI-->>CLI: print function name and arguments`,
+    steps: [
+      "Rust builds the same service-status schema shown in the REST demo.",
+      "genai converts the common Tool into provider-specific request JSON.",
+      "The demo prints the requested tool call instead of hiding it behind abstractions."
+    ],
+    callout: "Same contract as curl, with Rust builders around Tool and ChatRequest."
+  },
+  {
+    id: "genai-tool-roundtrip",
+    command: "just rust-demo genai-tool-roundtrip",
+    title: "genai-tool-roundtrip",
+    diagram: `sequenceDiagram
+  autonumber
+  participant CLI
+  participant RustHost
+  participant GenAI
+  participant Model
+  CLI->>RustHost: run dry-run round trip
+  RustHost->>RustHost: create synthetic ToolCall
+  RustHost->>GenAI: ToolResponse::new(call_id, result)
+  GenAI->>Model: conversation with tool result
+  Model-->>CLI: final answer text`,
+    steps: [
+      "The demo starts from a synthetic model-requested tool call.",
+      "The host creates a ToolResponse with the matching call_id.",
+      "genai sends the conversation forward so the model can produce final text."
+    ],
+    callout: "This is the Rust version of returning a tool result and asking for the final answer."
+  },
+  {
+    id: "genai-tool-basic-live",
+    command: "just rust-demo genai-tool-basic-live",
+    title: "genai-tool-basic-live",
+    diagram: `sequenceDiagram
+  autonumber
+  participant CLI
+  participant RustHost
+  participant GenAI
+  participant OpenAI
+  CLI->>RustHost: run live schema demo
+  RustHost->>GenAI: ChatRequest with Tool schema
+  GenAI->>OpenAI: authenticated model request
+  OpenAI-->>GenAI: live tool_call or text
+  GenAI-->>CLI: print returned tool calls`,
+    steps: [
+      "Uses OPENAI_API_KEY and OPENAI_MODEL from the environment.",
+      "Sends the same schema as the dry-run demo to the live provider.",
+      "Prints returned tool calls so the presenter can compare live behavior with dry-run output."
+    ],
+    callout: "Live variant: useful when quota is available; dry-run remains the reliable rehearsal path."
+  },
+  {
+    id: "genai-tool-roundtrip-live",
+    command: "just rust-demo genai-tool-roundtrip-live",
+    title: "genai-tool-roundtrip-live",
+    diagram: `sequenceDiagram
+  autonumber
+  participant CLI
+  participant RustHost
+  participant GenAI
+  participant OpenAI
+  CLI->>RustHost: run live round trip
+  RustHost->>RustHost: prepare synthetic tool result
+  RustHost->>GenAI: user, assistant tool_call, tool result
+  GenAI->>OpenAI: authenticated continuation
+  OpenAI-->>CLI: final grounded answer`,
+    steps: [
+      "Uses a synthetic service-status result, then sends the continuation live.",
+      "The model sees the tool result as prior conversation context.",
+      "The response demonstrates final-answer generation after host-side tool execution."
+    ],
+    callout: "Live continuation demo: provider call happens after the host has produced the tool result."
+  },
+  {
+    id: "mini-copilot-agent-loop",
+    command: "just rust-demo mini-copilot-agent-loop",
+    title: "mini-copilot-agent-loop",
+    diagram: `sequenceDiagram
+  autonumber
+  participant CLI
+  participant AgentLoop
+  participant Hooks
+  participant Tools
+  participant Workspace
+  CLI->>AgentLoop: Summarize service status
+  AgentLoop->>Hooks: before_model and after_model
+  AgentLoop->>Hooks: before_tool approval
+  AgentLoop->>Tools: read_file(service_status.md)
+  Tools->>Workspace: scoped file read
+  Workspace-->>Tools: file content
+  AgentLoop->>Hooks: after_tool
+  AgentLoop-->>CLI: answer plus transcript`,
+    steps: [
+      "The deterministic planner selects read_file for a status question.",
+      "Hooks record the visible loop events before and after model/tool steps.",
+      "The scoped ToolRegistry reads only from the fixture workspace."
+    ],
+    callout: "Mini Copilot loop: prompt, plan, approve, execute, summarize, return transcript."
+  },
+  {
+    id: "mini-copilot-hooks",
+    command: "just rust-demo mini-copilot-hooks",
+    title: "mini-copilot-hooks",
+    diagram: `sequenceDiagram
+  autonumber
+  participant CLI
+  participant AgentLoop
+  participant TraceHook
+  participant ToolRegistry
+  CLI->>AgentLoop: demo hooks
+  AgentLoop->>TraceHook: BeforeModel
+  AgentLoop->>TraceHook: AfterModel
+  AgentLoop->>TraceHook: BeforeTool approval
+  AgentLoop->>ToolRegistry: execute selected tool
+  AgentLoop->>TraceHook: AfterTool
+  AgentLoop-->>CLI: transcript.events`,
+    steps: [
+      "The same agent loop runs, but the important output is the hook transcript.",
+      "TraceHook records hook point, hook name, and message.",
+      "The output is a compact way to explain where policy and observability plug in."
+    ],
+    callout: "Hook demo: the transcript is the teaching artifact."
+  },
+  {
+    id: "mini-copilot-ask",
+    command: "just rust-demo mini-copilot-ask",
+    title: "mini-copilot-ask",
+    diagram: `sequenceDiagram
+  autonumber
+  participant CLI
+  participant Agent
+  participant Policy
+  participant ToolRegistry
+  participant Workspace
+  CLI->>Agent: ask Summarize service_status.md
+  Agent->>Policy: file access allowed
+  Agent->>ToolRegistry: read_file(service_status.md)
+  ToolRegistry->>Workspace: canonicalize and read
+  Workspace-->>ToolRegistry: service status content
+  Agent-->>CLI: answer plus tool_result`,
+    steps: [
+      "The prompt is wrapped as a Conversation.",
+      "AgentLoop selects read_file and checks policy before execution.",
+      "The answer includes the selected tool, tool result, and hook transcript."
+    ],
+    callout: "Local file question: safe fixture access with visible host-side control."
+  },
+  {
+    id: "mini-copilot-veto",
+    command: "just rust-demo mini-copilot-veto",
+    title: "mini-copilot-veto",
+    diagram: `sequenceDiagram
+  autonumber
+  participant CLI
+  participant Agent
+  participant Policy
+  participant ToolRegistry
+  CLI->>Agent: ask with veto_file_access=true
+  Agent->>Policy: read_file requires file access
+  Policy-->>Agent: deny before execution
+  Agent-->>CLI: access denied
+  Note over ToolRegistry: read_file is never called`,
+    steps: [
+      "The planned tool is read_file, which requires local file access.",
+      "AgentPolicy veto_file_access blocks execution before the ToolRegistry runs.",
+      "The just recipe treats the expected denial as a successful safety demo."
+    ],
+    callout: "Veto demo: user denial happens before local file content is read."
+  },
+  {
+    id: "mini-copilot-http",
+    command: "just rust-demo mini-copilot-http",
+    title: "mini-copilot-http",
+    diagram: `sequenceDiagram
+  autonumber
+  participant Terminal
+  participant Just
+  participant Axum
+  participant AgentCore
+  Terminal->>Just: start HTTP demo
+  Just->>Axum: cargo run mini-copilot-http --dry-run
+  Axum->>AgentCore: share workspace and dry-run state
+  Axum-->>Terminal: listening on 127.0.0.1:3000`,
+    steps: [
+      "Starts the Axum server with the deterministic mini-agent core.",
+      "The server exposes health, agent-loop, hooks, ask, and veto endpoints.",
+      "Run http-demo commands from another terminal while this process stays open."
+    ],
+    callout: "Server startup demo: keep it running before clicking through HTTP endpoint demos."
+  },
+  {
+    id: "mini-copilot-cli",
+    command: "just rust-demo mini-copilot-cli",
+    title: "mini-copilot-cli",
+    diagram: `sequenceDiagram
+  autonumber
+  participant CLI
+  participant AgentLoop
+  participant Hooks
+  participant ToolRegistry
+  CLI->>AgentLoop: alias for demo agent-loop
+  AgentLoop->>Hooks: record loop events
+  AgentLoop->>ToolRegistry: execute selected file tool
+  ToolRegistry-->>AgentLoop: tool_result
+  AgentLoop-->>CLI: JSON response`,
+    steps: [
+      "This is a backwards-compatible alias for mini-copilot-agent-loop.",
+      "It runs the same deterministic service-status flow.",
+      "Keep it as a short command for people who saw the older docs."
+    ],
+    callout: "Alias demo: same conversation as mini-copilot-agent-loop."
+  },
+  {
+    id: "health",
+    command: "just http-demo health",
+    title: "http health",
+    diagram: `sequenceDiagram
+  autonumber
+  participant Client
+  participant HTTP
+  Client->>HTTP: GET /health
+  HTTP-->>Client: status ok, mode dry-run`,
+    steps: [
+      "Confirms the mini-agent HTTP server is running.",
+      "Does not invoke the agent loop or any tool.",
+      "Useful as the first endpoint check before running ask or veto."
+    ],
+    callout: "Health check: server readiness only."
+  },
+  {
+    id: "agent-loop",
+    command: "just http-demo agent-loop",
+    title: "http agent-loop",
+    diagram: `sequenceDiagram
+  autonumber
+  participant Client
+  participant HTTP
+  participant AgentLoop
+  participant ToolRegistry
+  Client->>HTTP: POST /demo/agent-loop
+  HTTP->>AgentLoop: Summarize service status
+  AgentLoop->>ToolRegistry: read_file(service_status.md)
+  ToolRegistry-->>AgentLoop: tool_result
+  AgentLoop-->>HTTP: AgentResponse
+  HTTP-->>Client: JSON response`,
+    steps: [
+      "The endpoint supplies the prompt used by the CLI agent-loop demo.",
+      "HTTP maps the request into the same core AgentLoop.",
+      "The JSON response contains answer, selected_tool, tool_result, and transcript."
+    ],
+    callout: "HTTP surface, same core loop."
+  },
+  {
+    id: "hooks",
+    command: "just http-demo hooks",
+    title: "http hooks",
+    diagram: `sequenceDiagram
+  autonumber
+  participant Client
+  participant HTTP
+  participant AgentLoop
+  participant TraceHook
+  Client->>HTTP: POST /demo/hooks
+  HTTP->>AgentLoop: show hook trace
+  AgentLoop->>TraceHook: before and after events
+  TraceHook-->>AgentLoop: transcript entries
+  AgentLoop-->>Client: JSON with transcript.events`,
+    steps: [
+      "The endpoint runs the hook-focused mini-agent prompt.",
+      "TraceHook captures each important loop point.",
+      "The transcript makes before-model, after-model, before-tool, and after-tool visible."
+    ],
+    callout: "HTTP hook demo: inspect transcript.events in the response."
+  },
+  {
+    id: "ask",
+    command: "just http-demo ask",
+    title: "http ask",
+    diagram: `sequenceDiagram
+  autonumber
+  participant Client
+  participant HTTP
+  participant Agent
+  participant ToolRegistry
+  Client->>HTTP: POST /ask prompt
+  HTTP->>Agent: ask_with_policy(default)
+  Agent->>ToolRegistry: read_file(service_status.md)
+  ToolRegistry-->>Agent: file content
+  Agent-->>HTTP: answer and tool_result
+  HTTP-->>Client: JSON response`,
+    steps: [
+      "The client sends an explicit prompt in the JSON body.",
+      "The HTTP handler calls Agent::ask_with_policy with default policy.",
+      "The same scoped file tool and transcript are returned over HTTP."
+    ],
+    callout: "Custom prompt over HTTP: the API surface reuses the same agent core."
+  },
+  {
+    id: "veto",
+    command: "just http-demo veto",
+    title: "http veto",
+    diagram: `sequenceDiagram
+  autonumber
+  participant Client
+  participant HTTP
+  participant Agent
+  participant Policy
+  participant ToolRegistry
+  Client->>HTTP: POST /ask veto_file_access=true
+  HTTP->>Agent: ask_with_policy(veto)
+  Agent->>Policy: selected tool needs file access
+  Policy-->>Agent: deny
+  Agent-->>HTTP: access denied error
+  HTTP-->>Client: 400 JSON error
+  Note over ToolRegistry: no file read occurs`,
+    steps: [
+      "The request body sets veto_file_access to true.",
+      "The selected read_file tool is denied before execution.",
+      "The API returns a 400 JSON error instead of file content."
+    ],
+    callout: "HTTP veto demo: the same safety behavior is available through the API."
+  }
+];
+
+const demoTranscriptIndex = new Map(
+  demoTranscripts.map((demo, index) => [demo.id, index + 2])
+);
+
+const demoHash = (id: string): string =>
+  `${runItLocallySlideHash}/${demoTranscriptIndex.get(id) ?? 1}`;
+
+const demoOptionLink = (id: string): string =>
+  `<a class="demo-option-link" href="${demoHash(id)}"><code>${id}</code></a>`;
+
+const escapeHtml = (value: string): string =>
+  value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+
+const renderSequenceDiagram = (source: string): string => {
+  const participants: { id: string; label: string }[] = [];
+  const rows: string[] = [];
+
+  const participantIndex = (id: string): number => {
+    const index = participants.findIndex((participant) => participant.id === id);
+    return index === -1 ? 0 : index + 1;
+  };
+
+  for (const rawLine of source.split("\n")) {
+    const line = rawLine.trim();
+    const participantMatch = line.match(/^participant\s+(\w+)(?:\s+as\s+(.+))?$/);
+
+    if (participantMatch) {
+      participants.push({
+        id: participantMatch[1],
+        label: participantMatch[2] ?? participantMatch[1]
+      });
+    }
+  }
+
+  for (const rawLine of source.split("\n")) {
+    const line = rawLine.trim();
+    const messageMatch = line.match(/^(\w+)(--)?->>(\w+):\s+(.+)$/);
+    const noteMatch = line.match(/^Note over (\w+):\s+(.+)$/);
+
+    if (messageMatch) {
+      const from = participantIndex(messageMatch[1]);
+      const to = participantIndex(messageMatch[3]);
+      const start = Math.min(from, to);
+      const end = Math.max(from, to) + 1;
+      const direction =
+        from === to ? "self" : from < to ? "forward" : "reverse";
+
+      rows.push(`
+        <div class="sequence-row ${direction}" style="--start: ${start}; --end: ${end};">
+          <span class="sequence-message">
+            <strong>${escapeHtml(messageMatch[1])} ${from <= to ? "->" : "<-"} ${escapeHtml(messageMatch[3])}</strong>
+            ${escapeHtml(messageMatch[4])}
+          </span>
+        </div>
+      `);
+    } else if (noteMatch) {
+      const participant = participantIndex(noteMatch[1]);
+      rows.push(`
+        <div class="sequence-row note" style="--start: ${participant}; --end: ${participant + 1};">
+          <span class="sequence-message">
+            <strong>Note</strong>
+            ${escapeHtml(noteMatch[2])}
+          </span>
+        </div>
+      `);
+    }
+  }
+
+  return `
+    <div class="sequence-diagram" style="--participants: ${participants.length};">
+      <div class="sequence-participants">
+        ${participants
+          .map(
+            (participant) =>
+              `<span>${escapeHtml(participant.label)}</span>`
+          )
+          .join("")}
+      </div>
+      <div class="sequence-rows">${rows.join("")}</div>
+    </div>
+  `;
+};
+
+const renderTranscriptSlide = (demo: DemoTranscript): Slide => ({
+  className: "compact-slide transcript-slide",
+  html: `
+    <h2>${demo.title}</h2>
+    <p class="demo-command"><code>${demo.command}</code></p>
+    <div class="transcript-layout">
+      <article class="sequence-card">
+        <h3>Sequence diagram</h3>
+        ${renderSequenceDiagram(demo.diagram)}
+      </article>
+      <article class="transcript-card">
+        <h3>Transcript</h3>
+        <ol>
+          ${demo.steps.map((step) => `<li>${step}</li>`).join("")}
+        </ol>
+      </article>
+    </div>
+    <p class="callout">${demo.callout}</p>
+  `,
+  notes: speakerNotes(
+    `Use this transcript page to explain the conversation behind ${demo.command}.`,
+    "Walk the sequence diagram first, then read the transcript bullets as the concrete message flow.",
+    "Rubber duck review: name which participant owns each step and which data crosses the boundary."
+  )
+});
 
 const slides: Slide[] = [
   {
@@ -817,40 +1344,41 @@ POST /ask
           <div class="just-demo-grid">
             <article>
               <h3><code>just curl-demo &lt;name&gt;</code></h3>
-              <code>01-basic-chat</code>
-              <code>02-tool-schema</code>
-              <code>03-tool-result-roundtrip</code>
+              ${demoOptionLink("01-basic-chat")}
+              ${demoOptionLink("02-tool-schema")}
+              ${demoOptionLink("03-tool-result-roundtrip")}
             </article>
             <article>
               <h3><code>just rust-demo &lt;name&gt;</code></h3>
-              <code>genai-tool-basic</code>
-              <code>genai-tool-roundtrip</code>
-              <code>genai-tool-basic-live</code>
-              <code>genai-tool-roundtrip-live</code>
-              <code>mini-copilot-agent-loop</code>
-              <code>mini-copilot-hooks</code>
-              <code>mini-copilot-ask</code>
-              <code>mini-copilot-veto</code>
-              <code>mini-copilot-http</code>
-              <code>mini-copilot-cli</code>
+              ${demoOptionLink("genai-tool-basic")}
+              ${demoOptionLink("genai-tool-roundtrip")}
+              ${demoOptionLink("genai-tool-basic-live")}
+              ${demoOptionLink("genai-tool-roundtrip-live")}
+              ${demoOptionLink("mini-copilot-agent-loop")}
+              ${demoOptionLink("mini-copilot-hooks")}
+              ${demoOptionLink("mini-copilot-ask")}
+              ${demoOptionLink("mini-copilot-veto")}
+              ${demoOptionLink("mini-copilot-http")}
+              ${demoOptionLink("mini-copilot-cli")}
             </article>
             <article>
               <h3><code>just http-demo &lt;name&gt;</code></h3>
-              <code>health</code>
-              <code>agent-loop</code>
-              <code>hooks</code>
-              <code>ask</code>
-              <code>veto</code>
+              ${demoOptionLink("health")}
+              ${demoOptionLink("agent-loop")}
+              ${demoOptionLink("hooks")}
+              ${demoOptionLink("ask")}
+              ${demoOptionLink("veto")}
             </article>
           </div>
-          <p class="callout">Start the HTTP server first with <code>just rust-demo mini-copilot-http</code>, then run the <code>just http-demo</code> commands from another terminal.</p>
+          <p class="callout">Click a demo name to open its transcript page. Start the HTTP server first with <code>just rust-demo mini-copilot-http</code>, then run the <code>just http-demo</code> commands from another terminal.</p>
         `,
         notes: speakerNotes(
           "Use this vertical slide when someone asks what exact names can replace <name>.",
           "Call out that live rust-genai options require OPENAI_API_KEY and quota, while the default Rust and curl demos are dry-run safe.",
           "The veto option is expected to deny file access; the just recipe treats that denial as a successful demo."
         )
-      }
+      },
+      ...demoTranscripts.map(renderTranscriptSlide)
     ]
   },
   {
