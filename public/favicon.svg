@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="AI tooling presentation">
+  <rect width="64" height="64" rx="14" fill="#0d1117"/>
+  <path d="M18 18h16c7 0 12 5 12 12v16" fill="none" stroke="#58a6ff" stroke-width="5" stroke-linecap="round"/>
+  <path d="M18 46V30c0-7 5-12 12-12" fill="none" stroke="#3fb950" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="18" cy="18" r="5" fill="#58a6ff"/>
+  <circle cx="46" cy="46" r="5" fill="#58a6ff"/>
+  <circle cx="18" cy="46" r="5" fill="#3fb950"/>
+  <circle cx="34" cy="18" r="5" fill="#d2a8ff"/>
+  <path d="M31 31l7 7m0-7l-7 7" stroke="#f0f6fc" stroke-width="4" stroke-linecap="round"/>
+</svg>
