@@ -1,4 +1,4 @@
-# mini-copilot-ask raw messages
+# mini-copilot-ask raw conversation
 
 Command:
 
@@ -6,9 +6,9 @@ Command:
 just rust-demo mini-copilot-ask
 ```
 
-This is the raw message flow shown on slide `#/12/11`. The demo is deterministic and asks the local mini-agent to answer a question about `service_status.md`.
+This is the model/tool conversation shown on slide `#/12/11`. The demo uses a deterministic dry-run planner, but the shape mirrors a model asking the host to read a local file.
 
-## Message 1 - CLI request to the local agent
+## Message 1 - CLI -> Agent
 
 ```json
 {
@@ -23,7 +23,56 @@ This is the raw message flow shown on slide `#/12/11`. The demo is deterministic
 }
 ```
 
-## Message 2 - Policy allows local file access
+## Message 2 - Agent -> Model planner
+
+```json
+{
+  "conversation": [
+    {
+      "role": "user",
+      "content": "Summarize service_status.md"
+    }
+  ],
+  "available_tools": [
+    {
+      "name": "read_file",
+      "description": "Read a file from the scoped workspace.",
+      "requires_file_access": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ]
+      }
+    }
+  ]
+}
+```
+
+## Message 3 - Model planner -> Agent
+
+```json
+{
+  "role": "assistant",
+  "content": null,
+  "tool_calls": [
+    {
+      "id": "call_read_status",
+      "name": "read_file",
+      "arguments": {
+        "path": "service_status.md"
+      }
+    }
+  ]
+}
+```
+
+## Message 4 - Agent policy -> Agent
 
 ```json
 {
@@ -36,50 +85,61 @@ This is the raw message flow shown on slide `#/12/11`. The demo is deterministic
 }
 ```
 
-## Message 3 - Agent selects the scoped file tool
+## Message 5 - Agent -> ToolRegistry
 
 ```json
 {
-  "selected_tool": {
-    "name": "read_file",
-    "arguments": {
-      "path": "service_status.md"
-    }
+  "name": "read_file",
+  "arguments": {
+    "path": "service_status.md"
   }
 }
 ```
 
-## Message 4 - ToolRegistry validates the workspace read
+## Message 6 - ToolRegistry -> Agent
 
 ```json
 {
-  "workspace_access": {
-    "requested_path": "service_status.md",
-    "scope": "examples/rust/fixtures/workspace",
-    "checks": [
-      "canonicalize",
-      "stay_under_workspace_root"
-    ],
-    "operation": "read"
+  "name": "read_file",
+  "content": {
+    "path": "service_status.md",
+    "content": "# Service status\n\npayments-api is degraded while a database failover is in progress.\n\n- Current latency: 420 ms\n- Next update: 15 minutes\n- Customer impact: checkout retries may be slower than normal\n"
   }
 }
 ```
 
-## Message 5 - Workspace returns file content
+## Message 7 - Agent -> Model planner
 
 ```json
 {
-  "tool_result": {
-    "name": "read_file",
-    "content": {
-      "path": "service_status.md",
+  "conversation": [
+    {
+      "role": "user",
+      "content": "Summarize service_status.md"
+    },
+    {
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "id": "call_read_status",
+          "name": "read_file",
+          "arguments": {
+            "path": "service_status.md"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "tool_call_id": "call_read_status",
+      "name": "read_file",
       "content": "# Service status\n\npayments-api is degraded while a database failover is in progress.\n\n- Current latency: 420 ms\n- Next update: 15 minutes\n- Customer impact: checkout retries may be slower than normal\n"
     }
-  }
+  ]
 }
 ```
 
-## Message 6 - Agent returns the final CLI JSON
+## Message 8 - Model planner -> Agent -> CLI
 
 ```json
 {

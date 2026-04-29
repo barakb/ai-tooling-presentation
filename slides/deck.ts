@@ -21,17 +21,7 @@ interface DemoTranscript {
   diagram: string;
   steps: string[];
   stepMessageNumbers?: number[];
-  messages?: TranscriptMessage[];
-  rawTranscriptHref?: string;
   callout: string;
-}
-
-interface TranscriptMessage {
-  sequenceNumber: number;
-  title: string;
-  summary: string;
-  body?: string;
-  language?: "json" | "text";
 }
 
 interface SequenceParticipant {
@@ -54,6 +44,7 @@ const copilotAgentLoopDocs =
   "https://github.com/github/copilot-sdk/blob/main/docs/features/agent-loop.md";
 const copilotHooksDocs =
   "https://github.com/github/copilot-sdk/blob/main/docs/features/hooks.md";
+const githubRepoUrl = "https://github.com/barakb/ai-tooling-presentation";
 const runItLocallySlideHash = "#/12";
 
 const speakerNotes = (...items: string[]): string => `
@@ -125,6 +116,7 @@ const demoTranscripts: DemoTranscript[] = [
       "The tool result is returned as a provider-specific tool message.",
       "The model produces final text grounded in the tool result."
     ],
+    stepMessageNumbers: [2, 4, 5],
     callout: "Full REST round trip: host tool result goes back to the model before the final answer."
   },
   {
@@ -287,142 +279,7 @@ const demoTranscripts: DemoTranscript[] = [
       "AgentLoop selects read_file and checks policy before execution.",
       "The answer includes the selected tool, tool result, and hook transcript."
     ],
-    rawTranscriptHref: "./transcripts/mini-copilot-ask.md",
     stepMessageNumbers: [1, 2, 6],
-    messages: [
-      {
-        sequenceNumber: 1,
-        title: "CLI request to the local agent",
-        summary:
-          "The just recipe calls the mini-copilot CLI in dry-run mode with the file question.",
-        language: "json",
-        body: `{
-  "command": "just rust-demo mini-copilot-ask",
-  "argv": [
-    "mini-copilot-cli",
-    "--dry-run",
-    "ask",
-    "Summarize service_status.md"
-  ]
-}`
-      },
-      {
-        sequenceNumber: 2,
-        title: "Policy allows the read_file tool",
-        summary:
-          "The agent checks the selected tool against the current policy before touching the workspace.",
-        language: "json",
-        body: `{
-  "policy": {
-    "tool": "read_file",
-    "requires_file_access": true,
-    "veto_file_access": false,
-    "decision": "allow"
-  }
-}`
-      },
-      {
-        sequenceNumber: 3,
-        title: "Agent selects a scoped file tool",
-        summary:
-          "The model-side intent becomes a host-owned tool call with validated arguments.",
-        language: "json",
-        body: `{
-  "selected_tool": {
-    "name": "read_file",
-    "arguments": {
-      "path": "service_status.md"
-    }
-  }
-}`
-      },
-      {
-        sequenceNumber: 4,
-        title: "ToolRegistry performs the workspace read",
-        summary:
-          "The file tool resolves the requested path inside the fixture workspace before reading it.",
-        language: "json",
-        body: `{
-  "workspace_access": {
-    "requested_path": "service_status.md",
-    "scope": "examples/rust/fixtures/workspace",
-    "checks": [
-      "canonicalize",
-      "stay_under_workspace_root"
-    ],
-    "operation": "read"
-  }
-}`
-      },
-      {
-        sequenceNumber: 5,
-        title: "Workspace returns file content",
-        summary:
-          "The local file content is returned to the tool layer as structured data, not hidden model state.",
-        language: "json",
-        body: `{
-  "tool_result": {
-    "name": "read_file",
-    "content": {
-      "path": "service_status.md",
-      "content": "# Service status\\n\\npayments-api is degraded while a database failover is in progress.\\n\\n- Current latency: 420 ms\\n- Next update: 15 minutes\\n- Customer impact: checkout retries may be slower than normal\\n"
-    }
-  }
-}`
-      },
-      {
-        sequenceNumber: 6,
-        title: "Agent returns the final CLI JSON",
-        summary:
-          "The response keeps the final answer, selected tool, tool result, and hook transcript visible.",
-        language: "json",
-        body: `{
-  "answer": "Dry-run answer for 'Summarize service_status.md': service_status.md says payments-api is degraded while a database failover is in progress",
-  "selected_tool": {
-    "name": "read_file",
-    "arguments": {
-      "path": "service_status.md"
-    }
-  },
-  "tool_result": {
-    "name": "read_file",
-    "content": {
-      "path": "service_status.md",
-      "content": "# Service status\\n\\npayments-api is degraded while a database failover is in progress.\\n\\n- Current latency: 420 ms\\n- Next update: 15 minutes\\n- Customer impact: checkout retries may be slower than normal\\n"
-    }
-  },
-  "transcript": {
-    "events": [
-      {
-        "point": "before_model",
-        "hook": "trace",
-        "message": "planning tool call for prompt: Summarize service_status.md"
-      },
-      {
-        "point": "after_model",
-        "hook": "trace",
-        "message": "dry-run model selected tool: read_file"
-      },
-      {
-        "point": "before_tool",
-        "hook": "trace",
-        "message": "requesting approval for tool: read_file"
-      },
-      {
-        "point": "before_tool",
-        "hook": "trace",
-        "message": "validating and executing tool: read_file"
-      },
-      {
-        "point": "after_tool",
-        "hook": "trace",
-        "message": "tool result captured: read_file"
-      }
-    ]
-  }
-}`
-      }
-    ],
     callout: "Local file question: safe fixture access with visible host-side control."
   },
   {
@@ -648,7 +505,7 @@ const parseSequence = (
 
   for (const rawLine of source.split("\n")) {
     const line = rawLine.trim();
-    const messageMatch = line.match(/^(\w+)(--)?->>(\w+):\s+(.+)$/);
+    const messageMatch = line.match(/^(\w+)(-->>|->>)(\w+):\s+(.+)$/);
     const noteMatch = line.match(/^Note over (\w+):\s+(.+)$/);
 
     if (messageMatch) {
@@ -706,7 +563,7 @@ const renderSequenceDiagram = (demo: DemoTranscript): string => {
           .map(
             (message) => `
               <div class="sequence-row ${message.direction}" style="--start: ${message.start}; --end: ${message.end};">
-                <a class="sequence-message" href="${demoHash(demo.id)}" data-message-target="${message.id}">
+                <a class="sequence-message" id="${message.id}" href="${demoHash(demo.id)}" data-message-target="${message.id}">
                   <span class="sequence-number">${message.number}</span>
                   <strong>${escapeHtml(message.to ? `${message.from} ${message.direction === "reverse" ? "<-" : "->"} ${message.to}` : "Note")}</strong>
                   ${escapeHtml(message.text)}
@@ -718,42 +575,6 @@ const renderSequenceDiagram = (demo: DemoTranscript): string => {
       </div>
     </div>
   `;
-};
-
-const renderMessageDetails = (demo: DemoTranscript): string => {
-  const { messages } = parseSequence(demo.diagram, demo.id);
-  const fallbackDetails: TranscriptMessage[] = messages.map((message) => ({
-    sequenceNumber: message.number,
-    title: message.to
-      ? `${message.from} -> ${message.to}`
-      : `Note over ${message.from}`,
-    summary: message.text
-  }));
-  const details = demo.messages ?? fallbackDetails;
-
-  return details
-    .map((detail, index) => {
-      const message =
-        messages.find((candidate) => candidate.number === detail.sequenceNumber) ??
-        messages[Math.min(index, messages.length - 1)];
-
-      return `
-        <article class="message-detail" id="${message.id}">
-          <h4>
-            <a class="message-detail-anchor" href="${demoHash(demo.id)}" data-message-target="${message.id}">
-              Message ${message.number} · ${escapeHtml(detail.title)}
-            </a>
-          </h4>
-          <p>${escapeHtml(detail.summary)}</p>
-          ${
-            detail.body
-              ? `<pre><code class="language-${detail.language ?? "text"}">${escapeHtml(detail.body)}</code></pre>`
-              : ""
-          }
-        </article>
-      `;
-    })
-    .join("");
 };
 
 const renderNoticeLinks = (demo: DemoTranscript): string => {
@@ -778,10 +599,19 @@ const renderNoticeLinks = (demo: DemoTranscript): string => {
     .join("");
 };
 
+const rawTranscriptHref = (demoId: string): string =>
+  `${githubRepoUrl}/blob/main/public/transcripts/${demoId}.md`;
+
 const renderRawTranscriptLink = (demo: DemoTranscript): string =>
-  demo.rawTranscriptHref
-    ? `<a class="raw-transcript-link" href="${escapeHtml(demo.rawTranscriptHref)}" target="_blank" rel="noreferrer">Open raw messages</a>`
-    : "";
+  `<a class="raw-transcript-link" href="${escapeHtml(rawTranscriptHref(demo.id))}" target="_blank" rel="noreferrer">Open raw conversation</a>`;
+
+const renderRawConversationPanel = (demo: DemoTranscript): string => `
+  <article class="raw-conversation-panel">
+    <h3>Raw conversation</h3>
+    <p>Full send/receive JSON messages live in a separate Markdown file in the repo.</p>
+    ${renderRawTranscriptLink(demo)}
+  </article>
+`;
 
 const renderTranscriptSlide = (demo: DemoTranscript): Slide => ({
   className: "compact-slide transcript-slide",
@@ -794,15 +624,9 @@ const renderTranscriptSlide = (demo: DemoTranscript): Slide => ({
         ${renderSequenceDiagram(demo)}
       </article>
       <article class="transcript-card">
-        <div class="transcript-toolbar">
-          <h3>Actual messages</h3>
-          ${renderRawTranscriptLink(demo)}
-        </div>
-        <div class="message-detail-list">
-          ${renderMessageDetails(demo)}
-        </div>
+        ${renderRawConversationPanel(demo)}
         <h3>What to notice</h3>
-        <ol>
+        <ol class="notice-list">
           ${renderNoticeLinks(demo)}
         </ol>
       </article>
@@ -1716,7 +1540,7 @@ document.addEventListener("click", (event) => {
 
   document
     .querySelectorAll(
-      ".message-detail.is-selected, .sequence-message.is-selected, .message-detail-anchor.is-selected, .notice-link.is-selected"
+      ".sequence-message.is-selected, .notice-link.is-selected"
     )
     .forEach((element) => element.classList.remove("is-selected"));
 

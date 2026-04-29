@@ -474,9 +474,9 @@
 
 .transcript-layout {
   display: grid;
-  gap: 0.8rem;
-  grid-template-columns: 1.1fr 0.9fr;
-  margin-top: 0.5rem;
+  gap: 0.55rem;
+  grid-template-columns: 1.15fr 0.85fr;
+  margin-top: 0.35rem;
 }
 
 .sequence-card,
@@ -484,7 +484,7 @@
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: 18px;
-  padding: 0.65rem;
+  padding: 0.52rem;
 }
 
 .sequence-card h3,
@@ -493,27 +493,36 @@
   margin: 0 0 0.35rem;
 }
 
-.transcript-toolbar {
-  align-items: baseline;
-  display: flex;
-  gap: 0.45rem;
-  justify-content: space-between;
-  margin-bottom: 0.35rem;
+.raw-conversation-panel {
+  background: rgba(1, 4, 9, 0.52);
+  border: 1px solid rgba(88, 166, 255, 0.3);
+  border-radius: 14px;
+  margin-bottom: 0.42rem;
+  padding: 0.44rem;
+  text-align: left;
 }
 
-.transcript-toolbar h3 {
-  margin: 0;
+.raw-conversation-panel h3 {
+  font-size: 0.42em;
+  margin: 0 0 0.14rem;
+}
+
+.raw-conversation-panel p {
+  color: #c9d1d9;
+  font-size: 0.34em !important;
+  line-height: 1.22;
+  margin: 0 0 0.28rem !important;
 }
 
 .raw-transcript-link {
   background: rgba(88, 166, 255, 0.12);
   border: 1px solid rgba(88, 166, 255, 0.4);
-  border-radius: 999px;
+  border-radius: 10px;
   color: #f0f6fc;
-  flex: 0 0 auto;
-  font-size: 0.28em;
+  display: inline-block;
+  font-size: 0.34em;
   font-weight: 800;
-  padding: 0.16rem 0.34rem;
+  padding: 0.22rem 0.4rem;
   text-decoration: none;
 }
 
@@ -523,21 +532,24 @@
   border-color: var(--accent);
 }
 
-.transcript-card ol {
+.transcript-card .notice-list {
+  display: grid;
+  gap: 0.22rem;
+  list-style: none;
   margin: 0;
-  padding-left: 1rem;
+  padding: 0;
 }
 
-.transcript-card li {
+.transcript-card .notice-list li {
   font-size: 1em;
   line-height: 1.2;
-  margin-bottom: 0.28rem;
+  margin: 0;
 }
 
 .transcript-slide .callout {
-  font-size: 0.43em;
-  margin-top: 0.65rem;
-  padding: 0.65rem;
+  font-size: 0.38em;
+  margin-top: 0.38rem;
+  padding: 0.42rem 0.52rem;
 }
 
 .sequence-diagram {
@@ -545,12 +557,12 @@
   border: 1px solid rgba(139, 148, 158, 0.2);
   border-radius: 14px;
   box-sizing: border-box;
-  padding: 0.5rem;
+  padding: 0.42rem;
 }
 
 .sequence-participants {
   display: grid;
-  gap: 0.28rem;
+  gap: 0.22rem;
   grid-template-columns: repeat(var(--participants), minmax(0, 1fr));
   margin-bottom: 0.45rem;
 }
@@ -564,7 +576,7 @@
   font-size: 0.28em;
   font-weight: 800;
   overflow: hidden;
-  padding: 0.18rem 0.24rem;
+  padding: 0.14rem 0.2rem;
   text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -572,7 +584,7 @@
 
 .sequence-rows {
   display: grid;
-  gap: 0.24rem;
+  gap: 0.16rem;
 }
 
 .sequence-row {
@@ -586,10 +598,10 @@
   border-radius: 10px;
   color: #c9d1d9;
   display: block;
-  font-size: 0.27em;
+  font-size: 0.24em;
   grid-column: var(--start) / var(--end);
   line-height: 1.18;
-  padding: 0.23rem 0.32rem;
+  padding: 0.18rem 0.26rem;
   position: relative;
   text-decoration: none;
   transition:
@@ -630,90 +642,15 @@
   color: #f0f6fc;
 }
 
-.message-detail-list {
-  display: grid;
-  gap: 0.26rem;
-  margin-bottom: 0.45rem;
-  max-height: 286px;
-  overflow: auto;
-  padding-right: 0.15rem;
-}
-
-.message-detail {
-  background: rgba(1, 4, 9, 0.52);
-  border: 1px solid rgba(139, 148, 158, 0.22);
-  border-radius: 12px;
-  padding: 0.34rem 0.42rem;
-  transition:
-    background 120ms ease,
-    border-color 120ms ease;
-}
-
-.message-detail.is-selected {
-  background: rgba(88, 166, 255, 0.14);
-  border-color: var(--accent);
-}
-
-.message-detail h4 {
-  font-size: 0.36em;
-  margin: 0 0 0.12rem;
-}
-
-.message-detail-anchor {
-  color: var(--accent);
-  text-decoration: none;
-}
-
-.message-detail-anchor:hover,
-.message-detail-anchor:focus,
-.message-detail-anchor.is-selected {
-  color: #f0f6fc;
-  text-decoration: underline;
-  text-decoration-color: rgba(88, 166, 255, 0.6);
-}
-
-.message-detail p {
-  color: #c9d1d9;
-  font-size: 0.34em !important;
-  line-height: 1.2;
-  margin: 0;
-}
-
-.message-detail pre {
-  background: rgba(13, 17, 23, 0.94);
-  border: 1px solid rgba(139, 148, 158, 0.24);
-  border-radius: 10px;
-  box-sizing: border-box;
-  color: #e6edf3;
-  font-size: 0.27em;
-  line-height: 1.26;
-  margin: 0.28rem 0 0;
-  max-height: 190px;
-  overflow: auto;
-  padding: 0.34rem;
-  white-space: pre;
-  width: 100%;
-}
-
-.message-detail pre code {
-  background: transparent;
-  color: inherit;
-  font-size: inherit;
-  line-height: inherit;
-  max-height: none;
-  padding: 0;
-  white-space: pre;
-}
-
 .notice-link {
   background: rgba(1, 4, 9, 0.42);
   border: 1px solid transparent;
   border-radius: 10px;
   color: #c9d1d9;
   display: block;
-  font-size: 0.43em;
+  font-size: 0.36em;
   line-height: 1.22;
-  padding: 0.25rem 0.34rem;
+  padding: 0.2rem 0.3rem;
   text-decoration: none;
   transition:
     background 120ms ease,
