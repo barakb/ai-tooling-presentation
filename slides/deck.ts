@@ -23,6 +23,22 @@ interface DemoTranscript {
   callout: string;
 }
 
+interface SequenceParticipant {
+  id: string;
+  label: string;
+}
+
+interface SequenceMessage {
+  id: string;
+  number: number;
+  from: string;
+  to?: string;
+  text: string;
+  direction: "forward" | "reverse" | "self" | "note";
+  start: number;
+  end: number;
+}
+
 const copilotAgentLoopDocs =
   "https://github.com/github/copilot-sdk/blob/main/docs/features/agent-loop.md";
 const copilotHooksDocs =
@@ -456,9 +472,15 @@ const escapeHtml = (value: string): string =>
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
 
-const renderSequenceDiagram = (source: string): string => {
-  const participants: { id: string; label: string }[] = [];
-  const rows: string[] = [];
+const parseSequence = (
+  source: string,
+  demoId: string
+): {
+  participants: SequenceParticipant[];
+  messages: SequenceMessage[];
+} => {
+  const participants: SequenceParticipant[] = [];
+  const messages: SequenceMessage[] = [];
 
   const participantIndex = (id: string): number => {
     const index = participants.findIndex((participant) => participant.id === id);
@@ -483,6 +505,7 @@ const renderSequenceDiagram = (source: string): string => {
     const noteMatch = line.match(/^Note over (\w+):\s+(.+)$/);
 
     if (messageMatch) {
+      const number = messages.length + 1;
       const from = participantIndex(messageMatch[1]);
       const to = participantIndex(messageMatch[3]);
       const start = Math.min(from, to);
@@ -490,26 +513,36 @@ const renderSequenceDiagram = (source: string): string => {
       const direction =
         from === to ? "self" : from < to ? "forward" : "reverse";
 
-      rows.push(`
-        <div class="sequence-row ${direction}" style="--start: ${start}; --end: ${end};">
-          <span class="sequence-message">
-            <strong>${escapeHtml(messageMatch[1])} ${from <= to ? "->" : "<-"} ${escapeHtml(messageMatch[3])}</strong>
-            ${escapeHtml(messageMatch[4])}
-          </span>
-        </div>
-      `);
+      messages.push({
+        id: `${demoId}-message-${number}`,
+        number,
+        from: messageMatch[1],
+        to: messageMatch[3],
+        text: messageMatch[4],
+        direction,
+        start,
+        end
+      });
     } else if (noteMatch) {
+      const number = messages.length + 1;
       const participant = participantIndex(noteMatch[1]);
-      rows.push(`
-        <div class="sequence-row note" style="--start: ${participant}; --end: ${participant + 1};">
-          <span class="sequence-message">
-            <strong>Note</strong>
-            ${escapeHtml(noteMatch[2])}
-          </span>
-        </div>
-      `);
+      messages.push({
+        id: `${demoId}-message-${number}`,
+        number,
+        from: noteMatch[1],
+        text: noteMatch[2],
+        direction: "note",
+        start: participant,
+        end: participant + 1
+      });
     }
   }
+
+  return { participants, messages };
+};
+
+const renderSequenceDiagram = (demo: DemoTranscript): string => {
+  const { participants, messages } = parseSequence(demo.diagram, demo.id);
 
   return `
     <div class="sequence-diagram" style="--participants: ${participants.length};">
@@ -521,9 +554,61 @@ const renderSequenceDiagram = (source: string): string => {
           )
           .join("")}
       </div>
-      <div class="sequence-rows">${rows.join("")}</div>
+      <div class="sequence-rows">
+        ${messages
+          .map(
+            (message) => `
+              <div class="sequence-row ${message.direction}" style="--start: ${message.start}; --end: ${message.end};">
+                <a class="sequence-message" href="${demoHash(demo.id)}" data-message-target="${message.id}">
+                  <span class="sequence-number">${message.number}</span>
+                  <strong>${escapeHtml(message.to ? `${message.from} ${message.direction === "reverse" ? "<-" : "->"} ${message.to}` : "Note")}</strong>
+                  ${escapeHtml(message.text)}
+                </a>
+              </div>
+            `
+          )
+          .join("")}
+      </div>
     </div>
   `;
+};
+
+const renderMessageDetails = (demo: DemoTranscript): string => {
+  const { messages } = parseSequence(demo.diagram, demo.id);
+
+  return messages
+    .map(
+      (message) => `
+        <article class="message-detail" id="${message.id}">
+          <h4>
+            <a class="message-detail-anchor" href="${demoHash(demo.id)}" data-message-target="${message.id}">
+              ${message.number}. ${escapeHtml(message.to ? `${message.from} -> ${message.to}` : `Note over ${message.from}`)}
+            </a>
+          </h4>
+          <p>${escapeHtml(message.text)}</p>
+        </article>
+      `
+    )
+    .join("");
+};
+
+const renderNoticeLinks = (demo: DemoTranscript): string => {
+  const { messages } = parseSequence(demo.diagram, demo.id);
+
+  return demo.steps
+    .map((step, index) => {
+      const message = messages[Math.min(index, messages.length - 1)];
+
+      return `
+        <li>
+          <a class="notice-link" href="${demoHash(demo.id)}" data-message-target="${message.id}">
+            <span>Message ${message.number}</span>
+            ${escapeHtml(step)}
+          </a>
+        </li>
+      `;
+    })
+    .join("");
 };
 
 const renderTranscriptSlide = (demo: DemoTranscript): Slide => ({
@@ -534,12 +619,16 @@ const renderTranscriptSlide = (demo: DemoTranscript): Slide => ({
     <div class="transcript-layout">
       <article class="sequence-card">
         <h3>Sequence diagram</h3>
-        ${renderSequenceDiagram(demo.diagram)}
+        ${renderSequenceDiagram(demo)}
       </article>
       <article class="transcript-card">
-        <h3>Transcript</h3>
+        <h3>Actual messages</h3>
+        <div class="message-detail-list">
+          ${renderMessageDetails(demo)}
+        </div>
+        <h3>What to notice</h3>
         <ol>
-          ${demo.steps.map((step) => `<li>${step}</li>`).join("")}
+          ${renderNoticeLinks(demo)}
         </ol>
       </article>
     </div>
@@ -1432,3 +1521,34 @@ const deck = new Reveal({
 });
 
 await deck.initialize();
+
+document.addEventListener("click", (event) => {
+  const link = (event.target as HTMLElement).closest<HTMLAnchorElement>(
+    "[data-message-target]"
+  );
+
+  if (!link) {
+    return;
+  }
+
+  const target = document.getElementById(link.dataset.messageTarget ?? "");
+
+  if (!target) {
+    return;
+  }
+
+  event.preventDefault();
+
+  document
+    .querySelectorAll(
+      ".message-detail.is-selected, .sequence-message.is-selected, .message-detail-anchor.is-selected, .notice-link.is-selected"
+    )
+    .forEach((element) => element.classList.remove("is-selected"));
+
+  document
+    .querySelectorAll(`[data-message-target="${link.dataset.messageTarget}"]`)
+    .forEach((element) => element.classList.add("is-selected"));
+
+  target.classList.add("is-selected");
+  target.scrollIntoView({ block: "nearest", behavior: "smooth" });
+});

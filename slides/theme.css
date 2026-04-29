@@ -499,9 +499,9 @@
 }
 
 .transcript-card li {
-  font-size: 0.49em;
-  line-height: 1.25;
-  margin-bottom: 0.42rem;
+  font-size: 1em;
+  line-height: 1.2;
+  margin-bottom: 0.28rem;
 }
 
 .transcript-slide .callout {
@@ -561,6 +561,11 @@
   line-height: 1.18;
   padding: 0.23rem 0.32rem;
   position: relative;
+  text-decoration: none;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
 }
 
 .sequence-row.forward .sequence-message {
@@ -585,4 +590,93 @@
   display: block;
   font-size: 0.9em;
   margin-bottom: 0.08rem;
+}
+
+.sequence-message:hover,
+.sequence-message:focus,
+.sequence-message.is-selected {
+  background: rgba(88, 166, 255, 0.14);
+  border-color: var(--accent);
+  color: #f0f6fc;
+}
+
+.message-detail-list {
+  display: grid;
+  gap: 0.26rem;
+  margin-bottom: 0.45rem;
+  max-height: 172px;
+  overflow: auto;
+  padding-right: 0.15rem;
+}
+
+.message-detail {
+  background: rgba(1, 4, 9, 0.52);
+  border: 1px solid rgba(139, 148, 158, 0.22);
+  border-radius: 12px;
+  padding: 0.34rem 0.42rem;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease;
+}
+
+.message-detail.is-selected {
+  background: rgba(88, 166, 255, 0.14);
+  border-color: var(--accent);
+}
+
+.message-detail h4 {
+  font-size: 0.36em;
+  margin: 0 0 0.12rem;
+}
+
+.message-detail-anchor {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.message-detail-anchor:hover,
+.message-detail-anchor:focus,
+.message-detail-anchor.is-selected {
+  color: #f0f6fc;
+  text-decoration: underline;
+  text-decoration-color: rgba(88, 166, 255, 0.6);
+}
+
+.message-detail p {
+  color: #c9d1d9;
+  font-size: 0.34em !important;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.notice-link {
+  background: rgba(1, 4, 9, 0.42);
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: #c9d1d9;
+  display: block;
+  font-size: 0.43em;
+  line-height: 1.22;
+  padding: 0.25rem 0.34rem;
+  text-decoration: none;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
+}
+
+.notice-link span {
+  color: var(--accent);
+  display: block;
+  font-size: 0.82em;
+  font-weight: 800;
+  margin-bottom: 0.04rem;
+}
+
+.notice-link:hover,
+.notice-link:focus,
+.notice-link.is-selected {
+  background: rgba(88, 166, 255, 0.14);
+  border-color: rgba(88, 166, 255, 0.42);
+  color: #f0f6fc;
 }
