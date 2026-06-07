@@ -631,9 +631,9 @@ dependencies = [
 
 [[package]]
 name = "genai"
-version = "0.6.0-beta.18"
+version = "0.6.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1c4cdcea8e154cc3b2a6dc4a965acc8523ce94e760320e33dbe9fe304cecba77"
+checksum = "1d12aba7e9dc2c4d54654566dc3dc8383b5cb52e0cfc5754989afe0480d933e3"
 dependencies = [
  "base64",
  "bytes",
@@ -641,6 +641,7 @@ dependencies = [
  "eventsource-stream",
  "futures",
  "mime_guess",
+ "paste",
  "regex",
  "reqwest",
  "serde",
@@ -1296,6 +1297,12 @@ name = "openssl-probe"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7c87def4c32ab89d880effc9e097653c8da5d6ef28e6b539d313baaacfbafcbe"
+
+[[package]]
+name = "paste"
+version = "1.0.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "57c0d7b74b563b49d38dae00a0c37d4d6de9b432382b2892f0574ddcae73fd0a"
 
 [[package]]
 name = "percent-encoding"
