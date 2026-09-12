@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "reveal.js": "^5.2.1"
+    "reveal.js": "^6.0.0"
   },
   "devDependencies": {
     "@types/node": "^25.0.0",
